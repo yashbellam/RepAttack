@@ -41,12 +41,6 @@ class WorkoutDetailViewModel(
         }
     }
 
-    fun updateWorkout(workout: Workout) {
-        viewModelScope.launch {
-            repository.updateWorkout(workout)
-        }
-    }
-
     fun addExercise(
         workoutId: Long,
         name: String,
@@ -84,6 +78,25 @@ class WorkoutDetailViewModel(
     fun deleteExercise(exercise: Exercise) {
         viewModelScope.launch {
             repository.deleteExercise(exercise)
+        }
+    }
+
+    fun duplicateExercise(exercise: Exercise) {
+        viewModelScope.launch {
+            repository.insertExercise(
+                exercise.copy(
+                    id = 0,
+                    name = "${exercise.name} (copy)",
+                    orderIndex = exercises.value.size
+                )
+            )
+        }
+    }
+
+    fun updateWorkout(workout: Workout) {
+        viewModelScope.launch {
+            repository.updateWorkout(workout)
+            _workout.value = workout
         }
     }
 }

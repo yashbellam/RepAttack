@@ -66,8 +66,6 @@ fun StatsScreen(
     val volumeData by viewModel.volumeChartData.collectAsState()
     var showVolume by remember { mutableStateOf(false) }
 
-    val selectedExercise = exercises.find { it.id == selectedId }
-
     Scaffold(
         topBar = { TopAppBar(title = { Text("Stats") }) }
     ) { innerPadding ->

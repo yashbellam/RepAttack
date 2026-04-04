@@ -210,4 +210,21 @@ class LogSessionViewModel(
             }
         }
     }
+
+    /** Check or uncheck all sets for an exercise at once. */
+    fun toggleAllSets(exerciseIndex: Int) {
+        val exerciseState = _logState.value[exerciseIndex]
+        val allCompleted = exerciseState.sets.all { it.completed }
+
+        exerciseState.sets.forEachIndexed { setIndex, _ ->
+            val current = _logState.value[exerciseIndex].sets[setIndex]
+            if (allCompleted && current.completed) {
+                // Uncheck all
+                toggleSetCompleted(exerciseIndex, setIndex)
+            } else if (!allCompleted && !current.completed) {
+                // Check all unchecked
+                toggleSetCompleted(exerciseIndex, setIndex)
+            }
+        }
+    }
 }

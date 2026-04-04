@@ -108,6 +108,7 @@ fun LogSessionScreen(
                     onToggleCompleted = { setIndex ->
                         viewModel.toggleSetCompleted(exerciseIndex, setIndex)
                     },
+                    onToggleAll = { viewModel.toggleAllSets(exerciseIndex) },
                     onAddSet = { viewModel.addSet(exerciseIndex) },
                     onRemoveSet = { viewModel.removeSet(exerciseIndex) }
                 )
@@ -124,6 +125,7 @@ private fun ExerciseLogCard(
     onRepsDelta: (setIndex: Int, delta: Int) -> Unit,
     onSetReps: (setIndex: Int, reps: Int) -> Unit,
     onToggleCompleted: (setIndex: Int) -> Unit,
+    onToggleAll: () -> Unit,
     onAddSet: () -> Unit,
     onRemoveSet: () -> Unit
 ) {
@@ -200,7 +202,25 @@ private fun ExerciseLogCard(
                 Text("SET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
                 Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                 Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                Spacer(modifier = Modifier.width(40.dp))
+                // Check-all button
+                val allCompleted = state.sets.all { it.completed }
+                FilledIconButton(
+                    onClick = onToggleAll,
+                    modifier = Modifier.size(24.dp),
+                    shape = CircleShape,
+                    colors = if (allCompleted) {
+                        IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    } else {
+                        IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = if (allCompleted) "Uncheck all" else "Check all",
+                        modifier = Modifier.size(14.dp),
+                        tint = if (allCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))

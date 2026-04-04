@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
@@ -56,6 +57,14 @@ fun WorkoutDetailScreen(
     val exercises by viewModel.exercises.collectAsState()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
+    var showEditWorkoutSheet by remember { mutableStateOf(false) }
+    var isNavigatingAway by remember { mutableStateOf(false) }
+
+    // Handle system back gesture
+    androidx.activity.compose.BackHandler {
+        isNavigatingAway = true
+        onBack()
+    }
 
     LaunchedEffect(workoutId) {
         viewModel.loadWorkout(workoutId)
@@ -64,17 +73,38 @@ fun WorkoutDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(workout?.name ?: "Workout") },
+                title = {
+                    Column {
+                        Text(workout?.name ?: "Workout")
+                        if (workout?.description?.isNotBlank() == true) {
+                            Text(
+                                text = workout!!.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        isNavigatingAway = true
+                        onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showEditWorkoutSheet = true }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit workout")
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddExerciseDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add exercise")
+            if (!isNavigatingAway) {
+                FloatingActionButton(onClick = { showAddExerciseDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add exercise")
+                }
             }
         }
     ) { innerPadding ->
@@ -103,6 +133,7 @@ fun WorkoutDetailScreen(
                     ExerciseCard(
                         exercise = exercise,
                         onEdit = { exerciseToEdit = exercise },
+                        onDuplicate = { viewModel.duplicateExercise(exercise) },
                         onDelete = { viewModel.deleteExercise(exercise) }
                     )
                 }
@@ -150,6 +181,19 @@ fun WorkoutDetailScreen(
             }
         )
     }
+
+    if (showEditWorkoutSheet) {
+        workout?.let { w ->
+            WorkoutEditSheet(
+                workout = w,
+                onDismiss = { showEditWorkoutSheet = false },
+                onConfirm = { name, description ->
+                    viewModel.updateWorkout(w.copy(name = name, description = description))
+                    showEditWorkoutSheet = false
+                }
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,6 +201,7 @@ fun WorkoutDetailScreen(
 private fun ExerciseCard(
     exercise: Exercise,
     onEdit: () -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -236,6 +281,13 @@ private fun ExerciseCard(
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
+                }
+                IconButton(onClick = onDuplicate) {
+                    Icon(
+                        Icons.Default.ContentCopy,
+                        contentDescription = "Duplicate",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 IconButton(onClick = onEdit) {
                     Icon(

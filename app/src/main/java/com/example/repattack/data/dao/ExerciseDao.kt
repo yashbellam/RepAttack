@@ -17,6 +17,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): Exercise?
 
+    /** Returns all exercises for a workout as a one-shot list (not Flow). */
+    @Query("SELECT * FROM exercises WHERE workoutId = :workoutId ORDER BY orderIndex ASC")
+    suspend fun getByWorkoutIdOnce(workoutId: Long): List<Exercise>
+
     /** Returns all exercises across all workouts, for the stats picker. */
     @Query("SELECT * FROM exercises ORDER BY name ASC")
     fun getAll(): Flow<List<Exercise>>

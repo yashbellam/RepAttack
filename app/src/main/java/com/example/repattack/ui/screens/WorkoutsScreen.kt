@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
@@ -61,13 +62,20 @@ fun WorkoutsScreen(
     val workouts by viewModel.workouts.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var workoutToEdit by remember { mutableStateOf<Workout?>(null) }
+    var lastClickTime by remember { mutableStateOf(0L) }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Rep Attack") })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddSheet = true }) {
+            FloatingActionButton(onClick = {
+                val now = System.currentTimeMillis()
+                if (now - lastClickTime > 500) {
+                    lastClickTime = now
+                    showAddSheet = true
+                }
+            }) {
                 Icon(Icons.Default.Add, contentDescription = "Add workout")
             }
         }
@@ -98,6 +106,7 @@ fun WorkoutsScreen(
                         workout = workout,
                         onClick = { onWorkoutClick(workout.id) },
                         onEdit = { workoutToEdit = workout },
+                        onDuplicate = { viewModel.duplicateWorkout(workout) },
                         onDelete = { viewModel.deleteWorkout(workout) }
                     )
                 }
@@ -134,6 +143,7 @@ private fun WorkoutCard(
     workout: Workout,
     onClick: () -> Unit,
     onEdit: () -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -198,6 +208,13 @@ private fun WorkoutCard(
                         )
                     }
                 }
+                IconButton(onClick = onDuplicate) {
+                    Icon(
+                        Icons.Default.ContentCopy,
+                        contentDescription = "Duplicate",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 IconButton(onClick = onEdit) {
                     Icon(
                         Icons.Default.Edit,
@@ -212,7 +229,7 @@ private fun WorkoutCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WorkoutEditSheet(
+fun WorkoutEditSheet(
     workout: Workout?,
     onDismiss: () -> Unit,
     onConfirm: (String, String) -> Unit
