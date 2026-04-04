@@ -67,6 +67,9 @@ dependencies {
     // Charts
     implementation(libs.vico.compose.m3)
 
+    // Drag to reorder
+    implementation(libs.reorderable)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)

@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,6 +54,8 @@ import com.example.repattack.data.model.Workout
 import com.example.repattack.ui.AppViewModelFactory
 import com.example.repattack.ui.viewmodel.WorkoutListViewModel
 import kotlinx.coroutines.delay
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,21 +98,33 @@ fun WorkoutsScreen(
                 )
             }
         } else {
+            val lazyListState = rememberLazyListState()
+            val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                viewModel.moveWorkout(from.index, to.index)
+            }
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(workouts, key = { it.id }) { workout ->
-                    WorkoutCard(
-                        workout = workout,
-                        onClick = { onWorkoutClick(workout.id) },
-                        onEdit = { workoutToEdit = workout },
-                        onDuplicate = { viewModel.duplicateWorkout(workout) },
-                        onDelete = { viewModel.deleteWorkout(workout) }
-                    )
+                items(workouts.size, key = { workouts[it].id }) { index ->
+                    val workout = workouts[index]
+                    ReorderableItem(reorderableLazyListState, key = workout.id) { isDragging ->
+                        LaunchedEffect(isDragging) {
+                            if (!isDragging) viewModel.commitReorder()
+                        }
+                        WorkoutCard(
+                            workout = workout,
+                            onClick = { onWorkoutClick(workout.id) },
+                            onEdit = { workoutToEdit = workout },
+                            onDuplicate = { viewModel.duplicateWorkout(workout) },
+                            onDelete = { viewModel.deleteWorkout(workout) },
+                            dragModifier = Modifier.draggableHandle()
+                        )
+                    }
                 }
             }
         }
@@ -144,7 +160,8 @@ private fun WorkoutCard(
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    dragModifier: Modifier = Modifier
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -190,11 +207,17 @@ private fun WorkoutCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(start = 4.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Icon(
+                    Icons.Default.DragHandle,
+                    contentDescription = "Drag to reorder",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = dragModifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
                         text = workout.name,
                         style = MaterialTheme.typography.titleMedium

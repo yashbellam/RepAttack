@@ -10,13 +10,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +47,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.Exercise
 import com.example.repattack.ui.AppViewModelFactory
 import com.example.repattack.ui.viewmodel.WorkoutDetailViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,20 +126,32 @@ fun WorkoutDetailScreen(
                 )
             }
         } else {
+            val lazyListState = rememberLazyListState()
+            val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                viewModel.moveExercise(from.index, to.index)
+            }
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(exercises, key = { it.id }) { exercise ->
-                    ExerciseCard(
-                        exercise = exercise,
-                        onEdit = { exerciseToEdit = exercise },
-                        onDuplicate = { viewModel.duplicateExercise(exercise) },
-                        onDelete = { viewModel.deleteExercise(exercise) }
-                    )
+                items(exercises.size, key = { exercises[it].id }) { index ->
+                    val exercise = exercises[index]
+                    ReorderableItem(reorderableLazyListState, key = exercise.id) { isDragging ->
+                        LaunchedEffect(isDragging) {
+                            if (!isDragging) viewModel.commitReorder()
+                        }
+                        ExerciseCard(
+                            exercise = exercise,
+                            onEdit = { exerciseToEdit = exercise },
+                            onDuplicate = { viewModel.duplicateExercise(exercise) },
+                            onDelete = { viewModel.deleteExercise(exercise) },
+                            dragModifier = Modifier.draggableHandle()
+                        )
+                    }
                 }
             }
         }
@@ -202,7 +218,8 @@ private fun ExerciseCard(
     exercise: Exercise,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    dragModifier: Modifier = Modifier
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -247,11 +264,18 @@ private fun ExerciseCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(start = 4.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Icon(
+                    Icons.Default.DragHandle,
+                    contentDescription = "Drag to reorder",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = dragModifier
+                        .size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
                         text = exercise.name,
                         style = MaterialTheme.typography.titleMedium

@@ -18,6 +18,7 @@ class RepAttackRepository(
     suspend fun getWorkoutById(id: Long): Workout? = workoutDao.getById(id)
     suspend fun insertWorkout(workout: Workout): Long = workoutDao.insert(workout)
     suspend fun updateWorkout(workout: Workout) = workoutDao.update(workout)
+    suspend fun updateWorkouts(workouts: List<Workout>) = workoutDao.updateAll(workouts)
     suspend fun deleteWorkout(workout: Workout) = workoutDao.delete(workout)
 
     // -- Exercises --
@@ -29,6 +30,7 @@ class RepAttackRepository(
     suspend fun getExerciseById(id: Long): Exercise? = exerciseDao.getById(id)
     suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.insert(exercise)
     suspend fun updateExercise(exercise: Exercise) = exerciseDao.update(exercise)
+    suspend fun updateExercises(exercises: List<Exercise>) = exerciseDao.updateAll(exercises)
     suspend fun deleteExercise(exercise: Exercise) = exerciseDao.delete(exercise)
 
     // -- Exercise Logs --

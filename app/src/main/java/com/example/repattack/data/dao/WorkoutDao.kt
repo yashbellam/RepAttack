@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutDao {
-    /** Returns all workouts, oldest first. Emits a new list whenever the table changes. */
-    @Query("SELECT * FROM workouts ORDER BY createdAt ASC")
+    @Query("SELECT * FROM workouts ORDER BY orderIndex ASC")
     fun getAll(): Flow<List<Workout>>
 
     @Query("SELECT * FROM workouts WHERE id = :id")
@@ -22,6 +21,9 @@ interface WorkoutDao {
 
     @Update
     suspend fun update(workout: Workout)
+
+    @Update
+    suspend fun updateAll(workouts: List<Workout>)
 
     @Delete
     suspend fun delete(workout: Workout)
