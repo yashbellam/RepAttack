@@ -13,6 +13,18 @@ interface ExerciseLogDao {
     @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId ORDER BY date DESC")
     fun getByExerciseId(exerciseId: Long): Flow<List<ExerciseLog>>
 
+    /** Returns the most recent log for each set number of an exercise. */
+    @Query("""
+        SELECT * FROM exercise_logs e1
+        WHERE exerciseId = :exerciseId
+        AND date = (
+            SELECT MAX(e2.date) FROM exercise_logs e2 
+            WHERE e2.exerciseId = :exerciseId AND e2.setNumber = e1.setNumber
+        )
+        ORDER BY setNumber ASC
+    """)
+    suspend fun getLastSessionForExercise(exerciseId: Long): List<ExerciseLog>
+
     /** Returns logs for a specific exercise on a specific date (for loading a session). */
     @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND date >= :startOfDay AND date < :endOfDay ORDER BY setNumber ASC")
     fun getByExerciseIdAndDate(exerciseId: Long, startOfDay: Long, endOfDay: Long): Flow<List<ExerciseLog>>
@@ -25,6 +37,9 @@ interface ExerciseLogDao {
 
     @Delete
     suspend fun delete(log: ExerciseLog)
+
+    @Query("DELETE FROM exercise_logs WHERE id = :id")
+    suspend fun deleteById(id: Long)
 
     /** Deletes all logs for a specific exercise on a date range (re-logging a session). */
     @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND date >= :startOfDay AND date < :endOfDay")

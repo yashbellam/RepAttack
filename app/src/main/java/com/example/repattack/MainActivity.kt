@@ -28,6 +28,7 @@ import androidx.navigation.toRoute
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.repattack.navigation.Screen
 import com.example.repattack.ui.screens.LogScreen
+import com.example.repattack.ui.screens.LogSessionScreen
 import com.example.repattack.ui.screens.StatsScreen
 import com.example.repattack.ui.screens.WorkoutDetailScreen
 import com.example.repattack.ui.screens.WorkoutsScreen
@@ -95,13 +96,34 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable<Screen.Log> { LogScreen() }
+                        composable<Screen.Log> {
+                            LogScreen(
+                                onStartSession = { workoutId ->
+                                    navController.navigate(Screen.LogSession(workoutId))
+                                }
+                            )
+                        }
                         composable<Screen.Stats> { StatsScreen() }
                         composable<Screen.WorkoutDetail> { backStackEntry ->
                             val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
                             WorkoutDetailScreen(
                                 workoutId = workoutDetail.workoutId,
-                                onBack = { navController.popBackStack() }
+                                onBack = {
+                                    if (navController.currentBackStackEntry?.destination?.hasRoute(Screen.WorkoutDetail::class) == true) {
+                                        navController.popBackStack()
+                                    }
+                                }
+                            )
+                        }
+                        composable<Screen.LogSession> { backStackEntry ->
+                            val logSession = backStackEntry.toRoute<Screen.LogSession>()
+                            LogSessionScreen(
+                                workoutId = logSession.workoutId,
+                                onBack = {
+                                    if (navController.currentBackStackEntry?.destination?.hasRoute(Screen.LogSession::class) == true) {
+                                        navController.popBackStack()
+                                    }
+                                }
                             )
                         }
                     }

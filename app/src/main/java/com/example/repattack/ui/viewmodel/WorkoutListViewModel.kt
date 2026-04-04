@@ -27,15 +27,21 @@ class WorkoutListViewModel(
             initialValue = emptyList()
         )
 
-    fun addWorkout(name: String) {
+    fun addWorkout(name: String, description: String = "") {
         viewModelScope.launch {
-            repository.insertWorkout(Workout(name = name))
+            repository.insertWorkout(Workout(name = name, description = description))
         }
     }
 
     fun deleteWorkout(workout: Workout) {
         viewModelScope.launch {
             repository.deleteWorkout(workout)
+        }
+    }
+
+    fun updateWorkout(workout: Workout) {
+        viewModelScope.launch {
+            repository.updateWorkout(workout)
         }
     }
 }

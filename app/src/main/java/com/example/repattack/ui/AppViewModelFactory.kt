@@ -5,13 +5,10 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.repattack.RepAttackApplication
+import com.example.repattack.ui.viewmodel.LogSessionViewModel
 import com.example.repattack.ui.viewmodel.WorkoutDetailViewModel
 import com.example.repattack.ui.viewmodel.WorkoutListViewModel
 
-/**
- * Factory that creates ViewModels with access to the repository.
- * This is manual DI — we pass the repository from the Application class.
- */
 object AppViewModelFactory {
     val Factory = viewModelFactory {
         initializer {
@@ -19,6 +16,9 @@ object AppViewModelFactory {
         }
         initializer {
             WorkoutDetailViewModel(repAttackApplication().repository)
+        }
+        initializer {
+            LogSessionViewModel(repAttackApplication().repository)
         }
     }
 }

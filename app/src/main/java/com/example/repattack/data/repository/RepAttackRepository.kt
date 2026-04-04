@@ -31,7 +31,10 @@ class RepAttackRepository(
     // -- Exercise Logs --
     fun getLogsForExercise(exerciseId: Long): Flow<List<ExerciseLog>> =
         exerciseLogDao.getByExerciseId(exerciseId)
+    suspend fun getLastSessionForExercise(exerciseId: Long): List<ExerciseLog> =
+        exerciseLogDao.getLastSessionForExercise(exerciseId)
     suspend fun insertLog(log: ExerciseLog): Long = exerciseLogDao.insert(log)
     suspend fun insertLogs(logs: List<ExerciseLog>) = exerciseLogDao.insertAll(logs)
     suspend fun deleteLog(log: ExerciseLog) = exerciseLogDao.delete(log)
+    suspend fun deleteLogById(id: Long) = exerciseLogDao.deleteById(id)
 }
