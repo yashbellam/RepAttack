@@ -24,10 +24,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.repattack.navigation.Screen
 import com.example.repattack.ui.screens.LogScreen
 import com.example.repattack.ui.screens.StatsScreen
+import com.example.repattack.ui.screens.WorkoutDetailScreen
 import com.example.repattack.ui.screens.WorkoutsScreen
 import com.example.repattack.ui.theme.RepAttackTheme
 
@@ -86,9 +88,22 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        composable<Screen.Workouts> { WorkoutsScreen() }
+                        composable<Screen.Workouts> {
+                            WorkoutsScreen(
+                                onWorkoutClick = { workoutId ->
+                                    navController.navigate(Screen.WorkoutDetail(workoutId))
+                                }
+                            )
+                        }
                         composable<Screen.Log> { LogScreen() }
                         composable<Screen.Stats> { StatsScreen() }
+                        composable<Screen.WorkoutDetail> { backStackEntry ->
+                            val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
+                            WorkoutDetailScreen(
+                                workoutId = workoutDetail.workoutId,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                     }
                 }
             }

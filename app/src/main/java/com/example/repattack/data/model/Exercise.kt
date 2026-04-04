@@ -28,8 +28,9 @@ data class Exercise(
     val workoutId: Long,
     val name: String,
     val targetSets: Int? = null,
-    val targetReps: Int? = null,
-    val restTimeSeconds: Int? = null,
+    val minReps: Int? = null,
+    val maxReps: Int? = null,
+    val restTime: String = "",
     val notes: String = "",
     val url: String = "",
     val orderIndex: Int = 0
