@@ -17,6 +17,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): Exercise?
 
+    /** Returns all exercises across all workouts, for the stats picker. */
+    @Query("SELECT * FROM exercises ORDER BY name ASC")
+    fun getAll(): Flow<List<Exercise>>
+
     @Insert
     suspend fun insert(exercise: Exercise): Long
 

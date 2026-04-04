@@ -23,6 +23,7 @@ class RepAttackRepository(
     // -- Exercises --
     fun getExercisesForWorkout(workoutId: Long): Flow<List<Exercise>> =
         exerciseDao.getByWorkoutId(workoutId)
+    fun getAllExercises(): Flow<List<Exercise>> = exerciseDao.getAll()
     suspend fun getExerciseById(id: Long): Exercise? = exerciseDao.getById(id)
     suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.insert(exercise)
     suspend fun updateExercise(exercise: Exercise) = exerciseDao.update(exercise)

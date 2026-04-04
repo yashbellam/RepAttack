@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.repattack.RepAttackApplication
 import com.example.repattack.ui.viewmodel.LogSessionViewModel
+import com.example.repattack.ui.viewmodel.StatsViewModel
 import com.example.repattack.ui.viewmodel.WorkoutDetailViewModel
 import com.example.repattack.ui.viewmodel.WorkoutListViewModel
 
@@ -19,6 +20,9 @@ object AppViewModelFactory {
         }
         initializer {
             LogSessionViewModel(repAttackApplication().repository)
+        }
+        initializer {
+            StatsViewModel(repAttackApplication().repository)
         }
     }
 }
