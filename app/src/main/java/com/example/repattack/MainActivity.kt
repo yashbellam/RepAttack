@@ -4,16 +4,41 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.repattack.navigation.Screen
+import com.example.repattack.ui.screens.LogScreen
+import com.example.repattack.ui.screens.StatsScreen
+import com.example.repattack.ui.screens.WorkoutsScreen
 import com.example.repattack.ui.theme.RepAttackTheme
+
+/** Represents a tab in the bottom navigation bar. */
+data class TopLevelRoute(val label: String, val route: Screen, val icon: ImageVector)
+
+val topLevelRoutes = listOf(
+    TopLevelRoute("Workouts", Screen.Workouts, Icons.Filled.FitnessCenter),
+    TopLevelRoute("Log", Screen.Log, Icons.Filled.PlayArrow),
+    TopLevelRoute("Stats", Screen.Stats, Icons.Filled.BarChart),
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,17 +48,47 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RepAttackTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
+                val navController = rememberNavController()
+                val currentBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = currentBackStackEntry?.destination
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        NavigationBar {
+                            topLevelRoutes.forEach { route ->
+                                NavigationBarItem(
+                                    icon = { Icon(route.icon, contentDescription = route.label) },
+                                    label = { Text(route.label) },
+                                    selected = currentDestination?.hasRoute(route.route::class) == true,
+                                    onClick = {
+                                        navController.navigate(route.route) {
+                                            // Pop up to the start destination to avoid
+                                            // building up a large back stack
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            // Avoid multiple copies of the same destination
+                                            launchSingleTop = true
+                                            // Restore state when re-selecting a tab
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screen.Workouts,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center
+                            .padding(innerPadding)
                     ) {
-                        Text(
-                            text = "Rep Attack 💪",
-                            fontSize = 28.sp
-                        )
+                        composable<Screen.Workouts> { WorkoutsScreen() }
+                        composable<Screen.Log> { LogScreen() }
+                        composable<Screen.Stats> { StatsScreen() }
                     }
                 }
             }
