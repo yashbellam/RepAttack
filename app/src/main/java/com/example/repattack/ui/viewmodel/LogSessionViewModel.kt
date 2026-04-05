@@ -50,6 +50,50 @@ class LogSessionViewModel(
     private var initialized = false
     private var sessionTimestamp: Long = 0L
 
+    /** Called when returning to the log screen — refreshes exercises if they changed. */
+    fun refresh() {
+        val workoutId = _workoutId.value ?: return
+        viewModelScope.launch {
+            _workout.value = repository.getWorkoutById(workoutId)
+            
+            val dbExercises = repository.getExercisesForWorkoutOnce(workoutId)
+            val currentMap = _logState.value.associateBy { it.exercise.id }
+            
+            // Build new log state preserving existing set data for unchanged exercises
+            val newLogState = dbExercises.map { exercise ->
+                val existing = currentMap[exercise.id]
+                if (existing != null) {
+                    // Preserve logged sets, update exercise metadata
+                    existing.copy(exercise = exercise)
+                } else {
+                    // New exercise — load from last session
+                    val numSets = exercise.targetSets ?: 3
+                    val lastLogs = repository.getLastSessionForExercise(exercise.id)
+                    if (lastLogs.isNotEmpty()) {
+                        val logsBySetNumber = lastLogs.associateBy { it.setNumber }
+                        val fallbackWeight = lastLogs.mapNotNull { it.weight }.firstOrNull() ?: 0.0
+                        ExerciseLogState(
+                            exercise = exercise,
+                            sets = List(numSets) { index ->
+                                val log = logsBySetNumber[index + 1]
+                                SetEntry(
+                                    weight = log?.weight ?: fallbackWeight,
+                                    reps = log?.reps ?: 0
+                                )
+                            }
+                        )
+                    } else {
+                        ExerciseLogState(exercise = exercise, sets = List(numSets) { SetEntry() })
+                    }
+                }
+            }
+            
+            if (newLogState.map { it.exercise } != _logState.value.map { it.exercise }) {
+                _logState.value = newLogState
+            }
+        }
+    }
+
     fun loadWorkout(workoutId: Long) {
         if (initialized) return
         _workoutId.value = workoutId
@@ -252,6 +296,66 @@ class LogSessionViewModel(
                     }
                 }
             }
+        }
+    }
+
+    // -- Exercise CRUD (for merged screen) --
+
+    fun addExercise(
+        name: String, targetSets: Int?, minReps: Int?, maxReps: Int?,
+        restTime: String, notes: String, url: String
+    ) {
+        val workoutId = _workoutId.value ?: return
+        viewModelScope.launch {
+            repository.insertExercise(
+                Exercise(
+                    workoutId = workoutId, name = name, targetSets = targetSets,
+                    minReps = minReps, maxReps = maxReps, restTime = restTime,
+                    notes = notes, url = url,
+                    orderIndex = _logState.value.size
+                )
+            )
+            // Re-initialize to pick up new exercise
+            initialized = false
+            _logState.value = emptyList()
+            loadWorkout(workoutId)
+        }
+    }
+
+    fun updateExercise(exercise: Exercise) {
+        viewModelScope.launch {
+            repository.updateExercise(exercise)
+            // Update local state to reflect changes
+            _logState.value = _logState.value.map { state ->
+                if (state.exercise.id == exercise.id) state.copy(exercise = exercise)
+                else state
+            }
+        }
+    }
+
+    fun deleteExercise(exercise: Exercise) {
+        viewModelScope.launch {
+            repository.deleteExercise(exercise)
+            _logState.value = _logState.value.filter { it.exercise.id != exercise.id }
+        }
+    }
+
+    fun duplicateExercise(exercise: Exercise) {
+        val workoutId = _workoutId.value ?: return
+        viewModelScope.launch {
+            repository.insertExercise(
+                exercise.copy(id = 0, name = "${exercise.name} (copy)", orderIndex = _logState.value.size)
+            )
+            initialized = false
+            _logState.value = emptyList()
+            loadWorkout(workoutId)
+        }
+    }
+
+    fun updateWorkout(workout: Workout) {
+        viewModelScope.launch {
+            repository.updateWorkout(workout)
+            _workout.value = workout
         }
     }
 }

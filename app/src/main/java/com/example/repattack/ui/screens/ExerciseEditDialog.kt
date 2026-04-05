@@ -178,7 +178,7 @@ fun ExerciseEditDialog(
                             url.trim()
                         )
                     },
-                    enabled = name.isNotBlank()
+                    enabled = name.isNotBlank() && targetSets.toIntOrNull() != null && minReps.toIntOrNull() != null
                 ) {
                     Text(if (isEditing) "Save" else "Add")
                 }

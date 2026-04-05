@@ -28,7 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.repattack.navigation.Screen
-import com.example.repattack.ui.screens.LogScreen
 import com.example.repattack.ui.screens.LogSessionScreen
 import com.example.repattack.ui.screens.StatsScreen
 import com.example.repattack.ui.screens.WorkoutDetailScreen
@@ -40,7 +39,6 @@ data class TopLevelRoute(val label: String, val route: Screen, val icon: ImageVe
 
 val topLevelRoutes = listOf(
     TopLevelRoute("Workouts", Screen.Workouts, Icons.Filled.FitnessCenter),
-    TopLevelRoute("Log", Screen.Log, Icons.Filled.PlayArrow),
     TopLevelRoute("Stats", Screen.Stats, Icons.Filled.BarChart),
 )
 
@@ -95,30 +93,34 @@ class MainActivity : ComponentActivity() {
                         composable<Screen.Workouts> {
                             WorkoutsScreen(
                                 onWorkoutClick = { workoutId ->
-                                    navController.navigate(Screen.WorkoutDetail(workoutId))
-                                }
-                            )
-                        }
-                        composable<Screen.Log> {
-                            LogScreen(
-                                onStartSession = { workoutId ->
                                     navController.navigate(Screen.LogSession(workoutId))
                                 }
                             )
                         }
                         composable<Screen.Stats> { StatsScreen() }
-                        composable<Screen.WorkoutDetail> { backStackEntry ->
-                            val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
-                            WorkoutDetailScreen(
-                                workoutId = workoutDetail.workoutId,
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
                         composable<Screen.LogSession> { backStackEntry ->
                             val logSession = backStackEntry.toRoute<Screen.LogSession>()
                             LogSessionScreen(
                                 workoutId = logSession.workoutId,
-                                onBack = { navController.popBackStack() }
+                                onBack = {
+                                    navController.previousBackStackEntry?.let {
+                                        navController.popBackStack()
+                                    }
+                                },
+                                onEditExercises = { workoutId ->
+                                    navController.navigate(Screen.WorkoutDetail(workoutId))
+                                }
+                            )
+                        }
+                        composable<Screen.WorkoutDetail> { backStackEntry ->
+                            val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
+                            WorkoutDetailScreen(
+                                workoutId = workoutDetail.workoutId,
+                                onBack = {
+                                    navController.previousBackStackEntry?.let {
+                                        navController.popBackStack()
+                                    }
+                                }
                             )
                         }
                     }

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
@@ -78,6 +79,7 @@ import com.example.repattack.ui.viewmodel.SetEntry
 fun LogSessionScreen(
     workoutId: Long,
     onBack: () -> Unit,
+    onEditExercises: (Long) -> Unit,
     viewModel: LogSessionViewModel = viewModel(factory = AppViewModelFactory.Factory)
 ) {
     val workout by viewModel.workout.collectAsState()
@@ -87,18 +89,47 @@ fun LogSessionScreen(
         viewModel.loadWorkout(workoutId)
     }
 
+    // Refresh when returning from edit exercises screen
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(workout?.name ?: "Log Workout", fontWeight = FontWeight.Bold) },
+                title = {
+                    Column {
+                        Text(workout?.name ?: "Log Workout", fontWeight = FontWeight.Bold)
+                        if (workout?.description?.isNotBlank() == true) {
+                            Text(
+                                text = workout!!.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onEditExercises(workoutId) }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit exercises")
                     }
                 }
             )

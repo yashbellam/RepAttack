@@ -59,9 +59,23 @@ class WorkoutListViewModel(
 
     fun duplicateWorkout(workout: Workout) {
         viewModelScope.launch {
+            // Insert right after the original by shifting subsequent workouts
+            val allWorkouts = _workouts.value.toMutableList()
+            val insertIndex = allWorkouts.indexOfFirst { it.id == workout.id } + 1
+
             val newId = repository.insertWorkout(
-                Workout(name = "${workout.name} (copy)", description = workout.description)
+                Workout(
+                    name = "${workout.name} (copy)",
+                    description = workout.description,
+                    orderIndex = insertIndex
+                )
             )
+            // Shift orderIndex for workouts after the insert point
+            val updated = allWorkouts.filterIndexed { i, _ -> i >= insertIndex }.map {
+                it.copy(orderIndex = it.orderIndex + 1)
+            }
+            if (updated.isNotEmpty()) repository.updateWorkouts(updated)
+
             val exercises = repository.getExercisesForWorkoutOnce(workout.id)
             exercises.forEach { exercise ->
                 repository.insertExercise(

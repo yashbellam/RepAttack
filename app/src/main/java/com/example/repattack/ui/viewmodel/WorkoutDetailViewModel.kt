@@ -100,11 +100,19 @@ class WorkoutDetailViewModel(
 
     fun duplicateExercise(exercise: Exercise) {
         viewModelScope.launch {
+            val allExercises = _exercises.value
+            val insertIndex = allExercises.indexOfFirst { it.id == exercise.id } + 1
+
+            // Shift exercises after insert point
+            val toShift = allExercises.filter { it.orderIndex >= insertIndex }
+                .map { it.copy(orderIndex = it.orderIndex + 1) }
+            if (toShift.isNotEmpty()) repository.updateExercises(toShift)
+
             repository.insertExercise(
                 exercise.copy(
                     id = 0,
                     name = "${exercise.name} (copy)",
-                    orderIndex = exercises.value.size
+                    orderIndex = insertIndex
                 )
             )
         }
