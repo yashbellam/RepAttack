@@ -35,6 +35,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.Workout
@@ -70,16 +72,26 @@ fun WorkoutsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Rep Attack") })
+            TopAppBar(
+                title = { Text("Rep Attack", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                val now = System.currentTimeMillis()
-                if (now - lastClickTime > 500) {
-                    lastClickTime = now
-                    showAddSheet = true
-                }
-            }) {
+            FloatingActionButton(
+                onClick = {
+                    val now = System.currentTimeMillis()
+                    if (now - lastClickTime > 500) {
+                        lastClickTime = now
+                        showAddSheet = true
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Add workout")
             }
         }

@@ -2,7 +2,12 @@ package com.example.repattack.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,14 +43,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -74,7 +89,12 @@ fun LogSessionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(workout?.name ?: "Log Workout") },
+                title = { Text(workout?.name ?: "Log Workout", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -83,9 +103,13 @@ fun LogSessionScreen(
             )
         }
     ) { innerPadding ->
+        val focusManager = LocalFocusManager.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                }
                 .padding(innerPadding),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -195,18 +219,28 @@ private fun ExerciseLogCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Column headers — aligned to match SetRow layout
+            val allCompleted = state.sets.all { it.completed }
+            val haptic = LocalHapticFeedback.current
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("SET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
-                Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                // Check-all button
-                val allCompleted = state.sets.all { it.completed }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                // Check-all button — same size as per-row checkmark
                 FilledIconButton(
-                    onClick = onToggleAll,
-                    modifier = Modifier.size(24.dp),
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onToggleAll()
+                    },
+                    modifier = Modifier.size(32.dp),
                     shape = CircleShape,
                     colors = if (allCompleted) {
                         IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -217,7 +251,7 @@ private fun ExerciseLogCard(
                     Icon(
                         Icons.Default.Check,
                         contentDescription = if (allCompleted) "Uncheck all" else "Check all",
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = if (allCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -266,6 +300,7 @@ private fun SetRow(
     onSetReps: (Int) -> Unit,
     onToggleCompleted: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val textStyle = TextStyle(
         fontWeight = FontWeight.Medium,
         textAlign = TextAlign.Center,
@@ -289,53 +324,69 @@ private fun SetRow(
 
         // Weight: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
-            FilledTonalIconButton(onClick = { onWeightDelta(-2.5) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(-2.5) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease weight", modifier = Modifier.size(16.dp))
             }
+            var weightText by remember(set.weight) {
+                mutableStateOf(formatWeight(set.weight))
+            }
             BasicTextField(
-                value = formatWeight(set.weight),
+                value = weightText,
                 onValueChange = { text ->
+                    weightText = text
                     val parsed = text.replace(",", ".").toDoubleOrNull()
                     if (parsed != null) onSetWeight(parsed)
-                    else if (text.isEmpty()) onSetWeight(0.0)
                 },
                 textStyle = textStyle,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(52.dp)
+                modifier = Modifier.width(52.dp).onFocusChanged {
+                    if (!it.isFocused && weightText.isBlank()) weightText = formatWeight(set.weight)
+                }
             )
-            FilledTonalIconButton(onClick = { onWeightDelta(2.5) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(2.5) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.Default.Add, contentDescription = "Increase weight", modifier = Modifier.size(16.dp))
             }
         }
 
         // Reps: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
-            FilledTonalIconButton(onClick = { onRepsDelta(-1) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(-1) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease reps", modifier = Modifier.size(16.dp))
             }
+            var repsText by remember(set.reps) {
+                mutableStateOf("${set.reps}")
+            }
             BasicTextField(
-                value = "${set.reps}",
+                value = repsText,
                 onValueChange = { text ->
+                    repsText = text
                     val parsed = text.filter { it.isDigit() }.toIntOrNull()
                     if (parsed != null) onSetReps(parsed)
-                    else if (text.isEmpty()) onSetReps(0)
                 },
                 textStyle = textStyle,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(36.dp)
+                modifier = Modifier.width(36.dp).onFocusChanged {
+                    if (!it.isFocused && repsText.isBlank()) repsText = "${set.reps}"
+                }
             )
-            FilledTonalIconButton(onClick = { onRepsDelta(1) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(1) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.Default.Add, contentDescription = "Increase reps", modifier = Modifier.size(16.dp))
             }
         }
 
+        val checkScale by animateFloatAsState(
+            targetValue = if (set.completed) 1.0f else 0.85f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+            label = "check-scale"
+        )
+
         FilledIconButton(
-            onClick = onToggleCompleted,
-            modifier = Modifier.size(32.dp),
+            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onToggleCompleted() },
+            modifier = Modifier.size(32.dp).scale(checkScale),
             shape = CircleShape,
             colors = if (set.completed) {
                 IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)

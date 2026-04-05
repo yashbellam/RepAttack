@@ -32,6 +32,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.Exercise
@@ -62,13 +64,6 @@ fun WorkoutDetailScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
     var showEditWorkoutSheet by remember { mutableStateOf(false) }
-    var isNavigatingAway by remember { mutableStateOf(false) }
-
-    // Handle system back gesture
-    androidx.activity.compose.BackHandler {
-        isNavigatingAway = true
-        onBack()
-    }
 
     LaunchedEffect(workoutId) {
         viewModel.loadWorkout(workoutId)
@@ -79,21 +74,24 @@ fun WorkoutDetailScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(workout?.name ?: "Workout")
+                        Text(workout?.name ?: "Workout", fontWeight = FontWeight.Bold)
                         if (workout?.description?.isNotBlank() == true) {
                             Text(
                                 text = workout!!.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                         }
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 navigationIcon = {
-                    IconButton(onClick = {
-                        isNavigatingAway = true
-                        onBack()
-                    }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -105,10 +103,12 @@ fun WorkoutDetailScreen(
             )
         },
         floatingActionButton = {
-            if (!isNavigatingAway) {
-                FloatingActionButton(onClick = { showAddExerciseDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add exercise")
-                }
+            FloatingActionButton(
+                onClick = { showAddExerciseDialog = true },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add exercise")
             }
         }
     ) { innerPadding ->

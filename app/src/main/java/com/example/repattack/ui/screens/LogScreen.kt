@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,7 +35,15 @@ fun LogScreen(
     val workouts by viewModel.workouts.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Start Workout") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Start Workout", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
     ) { innerPadding ->
         if (workouts.isEmpty()) {
             Box(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -58,7 +59,9 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        NavigationBar {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ) {
                             topLevelRoutes.forEach { route ->
                                 NavigationBarItem(
                                     icon = { Icon(route.icon, contentDescription = route.label) },
@@ -108,22 +111,14 @@ class MainActivity : ComponentActivity() {
                             val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
                             WorkoutDetailScreen(
                                 workoutId = workoutDetail.workoutId,
-                                onBack = {
-                                    if (navController.currentBackStackEntry?.destination?.hasRoute(Screen.WorkoutDetail::class) == true) {
-                                        navController.popBackStack()
-                                    }
-                                }
+                                onBack = { navController.popBackStack() }
                             )
                         }
                         composable<Screen.LogSession> { backStackEntry ->
                             val logSession = backStackEntry.toRoute<Screen.LogSession>()
                             LogSessionScreen(
                                 workoutId = logSession.workoutId,
-                                onBack = {
-                                    if (navController.currentBackStackEntry?.destination?.hasRoute(Screen.LogSession::class) == true) {
-                                        navController.popBackStack()
-                                    }
-                                }
+                                onBack = { navController.popBackStack() }
                             )
                         }
                     }

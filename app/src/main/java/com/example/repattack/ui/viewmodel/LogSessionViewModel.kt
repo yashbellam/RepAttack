@@ -160,8 +160,8 @@ class LogSessionViewModel(
                         exerciseId = exerciseState.exercise.id,
                         date = sessionTimestamp,
                         setNumber = setIndex + 1,
-                        weight = if (current.weight > 0) current.weight else null,
-                        reps = if (current.reps > 0) current.reps else null
+                        weight = current.weight,
+                        reps = current.reps
                     )
                 )
                 // Update state with saved ID
@@ -213,17 +213,46 @@ class LogSessionViewModel(
 
     /** Check or uncheck all sets for an exercise at once. */
     fun toggleAllSets(exerciseIndex: Int) {
+        if (exerciseIndex !in _logState.value.indices) return
         val exerciseState = _logState.value[exerciseIndex]
         val allCompleted = exerciseState.sets.all { it.completed }
 
-        exerciseState.sets.forEachIndexed { setIndex, _ ->
-            val current = _logState.value[exerciseIndex].sets[setIndex]
-            if (allCompleted && current.completed) {
-                // Uncheck all
-                toggleSetCompleted(exerciseIndex, setIndex)
-            } else if (!allCompleted && !current.completed) {
-                // Check all unchecked
-                toggleSetCompleted(exerciseIndex, setIndex)
+        if (allCompleted) {
+            // Uncheck all — delete from DB and update state
+            viewModelScope.launch {
+                val savedIds = exerciseState.sets.mapNotNull { it.savedLogId }
+                savedIds.forEach { repository.deleteLogById(it) }
+                _logState.value = _logState.value.toMutableList().also { list ->
+                    if (exerciseIndex in list.indices) {
+                        val current = list[exerciseIndex]
+                        list[exerciseIndex] = current.copy(
+                            sets = current.sets.map { it.copy(completed = false, savedLogId = null) }
+                        )
+                    }
+                }
+            }
+        } else {
+            // Check all unchecked — save to DB and update state
+            viewModelScope.launch {
+                val newSets = exerciseState.sets.mapIndexed { i, set ->
+                    if (!set.completed) {
+                        val logId = repository.insertLog(
+                            ExerciseLog(
+                                exerciseId = exerciseState.exercise.id,
+                                date = sessionTimestamp,
+                                setNumber = i + 1,
+                                weight = set.weight,
+                                reps = set.reps
+                            )
+                        )
+                        set.copy(completed = true, savedLogId = logId)
+                    } else set
+                }
+                _logState.value = _logState.value.toMutableList().also { list ->
+                    if (exerciseIndex in list.indices) {
+                        list[exerciseIndex] = list[exerciseIndex].copy(sets = newSets)
+                    }
+                }
             }
         }
     }
