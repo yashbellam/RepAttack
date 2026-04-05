@@ -27,6 +27,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -43,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,7 +76,7 @@ fun WorkoutDetailScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(workout?.name ?: "Workout", fontWeight = FontWeight.Bold)
+                        Text(workout?.name ?: "Exercises", fontWeight = FontWeight.Bold)
                         if (workout?.description?.isNotBlank() == true) {
                             Text(
                                 text = workout!!.description,

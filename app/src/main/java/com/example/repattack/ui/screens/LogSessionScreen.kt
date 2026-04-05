@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -40,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -59,6 +62,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -259,7 +263,7 @@ private fun ExerciseLogCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("SET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
+                Text("SET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -267,12 +271,17 @@ private fun ExerciseLogCard(
                     Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 // Check-all button — same size as per-row checkmark
+                val checkAllScale by animateFloatAsState(
+                    targetValue = if (allCompleted) 1.0f else 0.85f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                    label = "check-all-scale"
+                )
                 FilledIconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onToggleAll()
                     },
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(32.dp).scale(checkAllScale),
                     shape = CircleShape,
                     colors = if (allCompleted) {
                         IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -341,18 +350,29 @@ private fun SetRow(
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "$setNumber",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(32.dp),
-            textAlign = TextAlign.Center
-        )
+        // Set number badge
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                    RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "$setNumber",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         // Weight: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
@@ -467,4 +487,34 @@ private fun SetRow(
 private fun formatWeight(weight: Double): String {
     return if (weight == weight.toLong().toDouble()) weight.toLong().toString()
     else "%.1f".format(weight)
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun PreviewExerciseLogCard() {
+    com.example.repattack.ui.theme.RepAttackTheme(dynamicColor = false) {
+        ExerciseLogCard(
+            state = ExerciseLogState(
+                exercise = com.example.repattack.data.model.Exercise(
+                    id = 1, workoutId = 1, name = "Bench Press",
+                    targetSets = 3, minReps = 6, maxReps = 8,
+                    restTime = "2-3 min", notes = "v shape - don't flare out",
+                    url = "https://youtu.be/example"
+                ),
+                sets = listOf(
+                    SetEntry(weight = 60.0, reps = 8, completed = true),
+                    SetEntry(weight = 60.0, reps = 7, completed = true),
+                    SetEntry(weight = 60.0, reps = 6, completed = false),
+                )
+            ),
+            onWeightDelta = { _, _ -> },
+            onSetWeight = { _, _ -> },
+            onRepsDelta = { _, _ -> },
+            onSetReps = { _, _ -> },
+            onToggleCompleted = { },
+            onToggleAll = { },
+            onAddSet = { },
+            onRemoveSet = { }
+        )
+    }
 }
