@@ -64,9 +64,7 @@ class LogSessionViewModel(
                         val numSets = exercise.targetSets ?: 3
                         val lastLogs = repository.getLastSessionForExercise(exercise.id)
                         if (lastLogs.isNotEmpty()) {
-                            // Pre-fill from last session, matching by set number
                             val logsBySetNumber = lastLogs.associateBy { it.setNumber }
-                            // Use the most common weight as fallback
                             val fallbackWeight = lastLogs.mapNotNull { it.weight }.firstOrNull() ?: 0.0
                             ExerciseLogState(
                                 exercise = exercise,

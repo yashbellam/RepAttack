@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -324,7 +325,14 @@ private fun SetRow(
 
         // Weight: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
-            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(-2.5) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(-2.5) },
+                modifier = Modifier.size(32.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF3D2228),
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease weight", modifier = Modifier.size(16.dp))
             }
             var weightText by remember(set.weight) {
@@ -345,14 +353,28 @@ private fun SetRow(
                     if (!it.isFocused && weightText.isBlank()) weightText = formatWeight(set.weight)
                 }
             )
-            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(2.5) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(2.5) },
+                modifier = Modifier.size(32.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF223D28),
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Increase weight", modifier = Modifier.size(16.dp))
             }
         }
 
         // Reps: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
-            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(-1) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(-1) },
+                modifier = Modifier.size(32.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF3D2228),
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease reps", modifier = Modifier.size(16.dp))
             }
             var repsText by remember(set.reps) {
@@ -373,7 +395,14 @@ private fun SetRow(
                     if (!it.isFocused && repsText.isBlank()) repsText = "${set.reps}"
                 }
             )
-            FilledTonalIconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(1) }, modifier = Modifier.size(32.dp)) {
+            FilledTonalIconButton(
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(1) },
+                modifier = Modifier.size(32.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF223D28),
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Increase reps", modifier = Modifier.size(16.dp))
             }
         }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -47,6 +48,17 @@ class StatsViewModel(
 
     private val _selectedExerciseId = MutableStateFlow<Long?>(null)
     val selectedExerciseId: StateFlow<Long?> = _selectedExerciseId.asStateFlow()
+
+    init {
+        // Auto-select the first exercise when the list loads
+        viewModelScope.launch {
+            allExercises.collect { exercises ->
+                if (exercises.isNotEmpty() && _selectedExerciseId.value == null) {
+                    _selectedExerciseId.value = exercises.first().id
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val logsForExercise: StateFlow<List<ExerciseLog>> = _selectedExerciseId
