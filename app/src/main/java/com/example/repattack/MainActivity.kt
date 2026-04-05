@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -25,22 +27,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.repattack.navigation.Screen
-import com.example.repattack.ui.screens.LogSessionScreen
 import com.example.repattack.ui.screens.StatsScreen
-import com.example.repattack.ui.screens.WorkoutDetailScreen
 import com.example.repattack.ui.screens.WorkoutsScreen
 import com.example.repattack.ui.theme.RepAttackTheme
 
-/** Represents a tab in the bottom navigation bar. */
 data class TopLevelRoute(val label: String, val route: Screen, val icon: ImageVector)
 
 val topLevelRoutes = listOf(
     TopLevelRoute("Workouts", Screen.Workouts, Icons.Filled.FitnessCenter),
     TopLevelRoute("Stats", Screen.Stats, Icons.Filled.BarChart),
 )
+
+/** Returns the tab index for a destination, or -1 if not a tab. */
+private fun tabIndex(dest: androidx.navigation.NavDestination?): Int {
+    if (dest == null) return -1
+    return topLevelRoutes.indexOfFirst { dest.hasRoute(it.route::class) }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,14 +71,10 @@ class MainActivity : ComponentActivity() {
                                     selected = currentDestination?.hasRoute(route.route::class) == true,
                                     onClick = {
                                         navController.navigate(route.route) {
-                                            // Pop up to the start destination to avoid
-                                            // building up a large back stack
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
                                             }
-                                            // Avoid multiple copies of the same destination
                                             launchSingleTop = true
-                                            // Restore state when re-selecting a tab
                                             restoreState = true
                                         }
                                     }
@@ -88,40 +88,65 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screen.Workouts,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(innerPadding),
+                        enterTransition = {
+                            val from = tabIndex(initialState.destination)
+                            val to = tabIndex(targetState.destination)
+                            val direction = if (to > from)
+                                AnimatedContentTransitionScope.SlideDirection.Start
+                            else
+                                AnimatedContentTransitionScope.SlideDirection.End
+                            slideIntoContainer(direction, tween(350))
+                        },
+                        exitTransition = {
+                            val from = tabIndex(initialState.destination)
+                            val to = tabIndex(targetState.destination)
+                            val direction = if (to > from)
+                                AnimatedContentTransitionScope.SlideDirection.Start
+                            else
+                                AnimatedContentTransitionScope.SlideDirection.End
+                            slideOutOfContainer(direction, tween(350))
+                        },
+                        popEnterTransition = {
+                            val from = tabIndex(initialState.destination)
+                            val to = tabIndex(targetState.destination)
+                            val direction = if (to > from)
+                                AnimatedContentTransitionScope.SlideDirection.Start
+                            else
+                                AnimatedContentTransitionScope.SlideDirection.End
+                            slideIntoContainer(direction, tween(350))
+                        },
+                        popExitTransition = {
+                            val from = tabIndex(initialState.destination)
+                            val to = tabIndex(targetState.destination)
+                            val direction = if (to > from)
+                                AnimatedContentTransitionScope.SlideDirection.Start
+                            else
+                                AnimatedContentTransitionScope.SlideDirection.End
+                            slideOutOfContainer(direction, tween(350))
+                        },
                     ) {
                         composable<Screen.Workouts> {
                             WorkoutsScreen(
                                 onWorkoutClick = { workoutId ->
-                                    navController.navigate(Screen.LogSession(workoutId))
+                                    startActivity(
+                                        LogSessionActivity.newIntent(this@MainActivity, workoutId)
+                                    )
                                 }
                             )
                         }
-                        composable<Screen.Stats> { StatsScreen() }
-                        composable<Screen.LogSession> { backStackEntry ->
-                            val logSession = backStackEntry.toRoute<Screen.LogSession>()
-                            LogSessionScreen(
-                                workoutId = logSession.workoutId,
-                                onBack = {
-                                    navController.previousBackStackEntry?.let {
-                                        navController.popBackStack()
+
+                        composable<Screen.Stats> {
+                            BackHandler {
+                                navController.navigate(Screen.Workouts) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
                                     }
-                                },
-                                onEditExercises = { workoutId ->
-                                    navController.navigate(Screen.WorkoutDetail(workoutId))
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                            )
-                        }
-                        composable<Screen.WorkoutDetail> { backStackEntry ->
-                            val workoutDetail = backStackEntry.toRoute<Screen.WorkoutDetail>()
-                            WorkoutDetailScreen(
-                                workoutId = workoutDetail.workoutId,
-                                onBack = {
-                                    navController.previousBackStackEntry?.let {
-                                        navController.popBackStack()
-                                    }
-                                }
-                            )
+                            }
+                            StatsScreen()
                         }
                     }
                 }

@@ -26,5 +26,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".LogSessionActivity"
+            android:theme="@style/Theme.RepAttack" />
+
+        <activity
+            android:name=".WorkoutDetailActivity"
+            android:theme="@style/Theme.RepAttack" />
+
     </application>
 </manifest>
