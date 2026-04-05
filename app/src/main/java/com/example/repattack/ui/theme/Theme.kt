@@ -2,6 +2,8 @@ package com.example.repattack.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -65,6 +67,7 @@ private val RepAttackShapes = Shapes(
     extraLarge = RoundedCornerShape(32.dp),
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RepAttackTheme(
     dynamicColor: Boolean = true,
@@ -77,7 +80,7 @@ fun RepAttackTheme(
         else -> DarkColorScheme
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = RepAttackTypography,
         shapes = RepAttackShapes,
