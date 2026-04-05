@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screen.Workouts,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
+                            .padding(bottom = innerPadding.calculateBottomPadding()),
                         enterTransition = {
                             val from = tabIndex(initialState.destination)
                             val to = tabIndex(targetState.destination)

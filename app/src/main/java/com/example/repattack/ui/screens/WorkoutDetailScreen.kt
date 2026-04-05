@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.Exercise
@@ -72,7 +73,6 @@ fun WorkoutDetailScreen(
         viewModel.loadWorkout(workoutId)
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -91,6 +91,7 @@ fun WorkoutDetailScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 scrollBehavior = scrollBehavior,
+                collapsedHeight = 64.dp,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

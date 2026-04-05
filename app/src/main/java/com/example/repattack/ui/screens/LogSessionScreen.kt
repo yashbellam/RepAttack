@@ -107,7 +107,6 @@ fun LogSessionScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -126,6 +125,7 @@ fun LogSessionScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 scrollBehavior = scrollBehavior,
+                collapsedHeight = 64.dp,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

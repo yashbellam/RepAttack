@@ -28,11 +28,11 @@
 
         <activity
             android:name=".LogSessionActivity"
-            android:theme="@style/Theme.RepAttack" />
+            android:theme="@style/Theme.RepAttack.Compose" />
 
         <activity
             android:name=".WorkoutDetailActivity"
-            android:theme="@style/Theme.RepAttack" />
+            android:theme="@style/Theme.RepAttack.Compose" />
 
     </application>
 </manifest>
