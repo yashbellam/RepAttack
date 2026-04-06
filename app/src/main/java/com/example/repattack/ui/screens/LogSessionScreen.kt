@@ -492,7 +492,7 @@ private fun formatWeight(weight: Double): String {
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PreviewExerciseLogCard() {
-    com.example.repattack.ui.theme.RepAttackTheme(dynamicColor = false) {
+    com.example.repattack.ui.theme.RepAttackTheme {
         ExerciseLogCard(
             state = ExerciseLogState(
                 exercise = com.example.repattack.data.model.Exercise(

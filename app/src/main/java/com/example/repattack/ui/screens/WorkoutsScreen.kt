@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +37,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -201,7 +204,7 @@ fun WorkoutsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun WorkoutCard(
     workout: Workout,
@@ -276,7 +279,7 @@ private fun WorkoutCard(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onClick() }
-                        .padding(top = 16.dp, bottom = 16.dp),
+                        .padding(top = 16.dp, bottom = 16.dp, end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
@@ -297,19 +300,29 @@ private fun WorkoutCard(
                         )
                     }
                 }
-                IconButton(onClick = onDuplicate) {
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = "Duplicate",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                val buttonShapes = IconButtonDefaults.shapes()
+                val haptic = LocalHapticFeedback.current
+                FilledTonalIconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDuplicate()
+                    },
+                    modifier = Modifier.size(narrowSize),
+                    shapes = buttonShapes
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
                 }
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Edit",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Spacer(modifier = Modifier.width(8.dp))
+                FilledTonalIconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onEdit()
+                    },
+                    modifier = Modifier.size(narrowSize),
+                    shapes = buttonShapes
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
                 }
                 }
             }
