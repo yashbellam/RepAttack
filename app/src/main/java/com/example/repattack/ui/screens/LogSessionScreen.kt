@@ -2,9 +2,6 @@ package com.example.repattack.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -32,11 +28,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -58,7 +55,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -132,9 +128,19 @@ fun LogSessionScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEditExercises(workoutId) }) {
+                    val wideSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)
+                    val haptic = LocalHapticFeedback.current
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onEditExercises(workoutId)
+                        },
+                        modifier = Modifier.size(wideSize),
+                        shapes = IconButtonDefaults.shapes()
+                    ) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit exercises")
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         }
@@ -177,6 +183,7 @@ fun LogSessionScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ExerciseLogCard(
     state: ExerciseLogState,
@@ -270,30 +277,24 @@ private fun ExerciseLogCard(
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                // Check-all button — same size as per-row checkmark
-                val checkAllScale by animateFloatAsState(
-                    targetValue = if (allCompleted) 1.0f else 0.85f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-                    label = "check-all-scale"
-                )
-                FilledIconButton(
-                    onClick = {
+                // Check-all toggle button — M3E shape morph
+                OutlinedIconToggleButton(
+                    checked = allCompleted,
+                    onCheckedChange = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onToggleAll()
                     },
-                    modifier = Modifier.size(32.dp).scale(checkAllScale),
-                    shape = CircleShape,
-                    colors = if (allCompleted) {
-                        IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    } else {
-                        IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)
-                    }
+                    modifier = Modifier.size(32.dp),
+                    shapes = IconButtonDefaults.toggleableShapes(),
+                    colors = IconButtonDefaults.outlinedIconToggleButtonColors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primary,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Icon(
-                        Icons.Default.Check,
+                        Icons.Filled.Check,
                         contentDescription = if (allCompleted) "Uncheck all" else "Check all",
-                        modifier = Modifier.size(16.dp),
-                        tint = if (allCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -331,6 +332,7 @@ private fun ExerciseLogCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SetRow(
     setNumber: Int,
@@ -379,6 +381,7 @@ private fun SetRow(
             FilledTonalIconButton(
                 onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(-2.5) },
                 modifier = Modifier.size(32.dp),
+                shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF3D2228),
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -392,21 +395,24 @@ private fun SetRow(
             BasicTextField(
                 value = weightText,
                 onValueChange = { text ->
-                    weightText = text
-                    val parsed = text.replace(",", ".").toDoubleOrNull()
-                    if (parsed != null) onSetWeight(parsed)
+                    if (text.isEmpty() || text.replace(",", ".").toDoubleOrNull() != null || text == "." || text == ",") {
+                        weightText = text
+                        val parsed = text.replace(",", ".").toDoubleOrNull()
+                        if (parsed != null) onSetWeight(parsed)
+                    }
                 },
                 textStyle = textStyle,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 modifier = Modifier.width(52.dp).onFocusChanged {
-                    if (!it.isFocused && weightText.isBlank()) weightText = formatWeight(set.weight)
+                    if (!it.isFocused) weightText = formatWeight(set.weight)
                 }
             )
             FilledTonalIconButton(
                 onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(2.5) },
                 modifier = Modifier.size(32.dp),
+                shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF223D28),
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -421,6 +427,7 @@ private fun SetRow(
             FilledTonalIconButton(
                 onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(-1) },
                 modifier = Modifier.size(32.dp),
+                shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF3D2228),
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -434,21 +441,24 @@ private fun SetRow(
             BasicTextField(
                 value = repsText,
                 onValueChange = { text ->
-                    repsText = text
-                    val parsed = text.filter { it.isDigit() }.toIntOrNull()
-                    if (parsed != null) onSetReps(parsed)
+                    if (text.isEmpty() || text.all { it.isDigit() }) {
+                        repsText = text
+                        val parsed = text.toIntOrNull()
+                        if (parsed != null) onSetReps(parsed)
+                    }
                 },
                 textStyle = textStyle,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 modifier = Modifier.width(36.dp).onFocusChanged {
-                    if (!it.isFocused && repsText.isBlank()) repsText = "${set.reps}"
+                    if (!it.isFocused) repsText = "${set.reps}"
                 }
             )
             FilledTonalIconButton(
                 onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(1) },
                 modifier = Modifier.size(32.dp),
+                shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF223D28),
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -458,27 +468,23 @@ private fun SetRow(
             }
         }
 
-        val checkScale by animateFloatAsState(
-            targetValue = if (set.completed) 1.0f else 0.85f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-            label = "check-scale"
-        )
-
-        FilledIconButton(
-            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onToggleCompleted() },
-            modifier = Modifier.size(32.dp).scale(checkScale),
-            shape = CircleShape,
-            colors = if (set.completed) {
-                IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
-            } else {
-                IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)
-            }
+        OutlinedIconToggleButton(
+            checked = set.completed,
+            onCheckedChange = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onToggleCompleted()
+            },
+            modifier = Modifier.size(32.dp),
+            shapes = IconButtonDefaults.toggleableShapes(),
+            colors = IconButtonDefaults.outlinedIconToggleButtonColors(
+                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                checkedContentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Icon(
-                Icons.Default.Check,
+                Icons.Filled.Check,
                 contentDescription = if (set.completed) "Completed" else "Mark complete",
-                modifier = Modifier.size(16.dp),
-                tint = if (set.completed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier.size(16.dp)
             )
         }
     }

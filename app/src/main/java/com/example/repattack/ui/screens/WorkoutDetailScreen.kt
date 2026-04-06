@@ -119,9 +119,19 @@ fun WorkoutDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showEditWorkoutSheet = true }) {
+                    val wideSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)
+                    val haptic = LocalHapticFeedback.current
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showEditWorkoutSheet = true
+                        },
+                        modifier = Modifier.size(wideSize),
+                        shapes = IconButtonDefaults.shapes()
+                    ) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit workout")
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         },
