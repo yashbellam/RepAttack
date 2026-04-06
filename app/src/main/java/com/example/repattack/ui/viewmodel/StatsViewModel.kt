@@ -123,6 +123,12 @@ class StatsViewModel(
         _selectedExerciseId.value = exerciseId
     }
 
+    fun updateSessionDate(oldDate: Long, newDate: Long) {
+        viewModelScope.launch {
+            repository.updateSessionDate(oldDate, newDate)
+        }
+    }
+
     private fun formatWeight(weight: Double?): String {
         if (weight == null) return "0"
         return if (weight == weight.toLong().toDouble()) weight.toLong().toString()

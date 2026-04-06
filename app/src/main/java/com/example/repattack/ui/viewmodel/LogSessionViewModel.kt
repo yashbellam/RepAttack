@@ -51,6 +51,12 @@ class LogSessionViewModel(
     private var initialized = false
     private var sessionTimestamp: Long = 0L
 
+    fun setSessionDate(millis: Long) {
+        sessionTimestamp = millis
+    }
+
+    fun getSessionDate(): Long = sessionTimestamp
+
     /** Called when returning to the log screen — refreshes exercises if they changed. */
     fun refresh() {
         val workoutId = _workoutId.value ?: return

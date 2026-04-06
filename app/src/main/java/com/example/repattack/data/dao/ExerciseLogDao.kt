@@ -47,4 +47,7 @@ interface ExerciseLogDao {
     /** Deletes all logs for a specific exercise on a date range (re-logging a session). */
     @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND date >= :startOfDay AND date < :endOfDay")
     suspend fun deleteByExerciseIdAndDate(exerciseId: Long, startOfDay: Long, endOfDay: Long)
+
+    @Query("UPDATE exercise_logs SET date = :newDate WHERE date = :oldDate")
+    suspend fun updateSessionDate(oldDate: Long, newDate: Long)
 }

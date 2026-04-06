@@ -24,12 +24,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.OutlinedIconToggleButton
@@ -45,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -85,9 +89,12 @@ fun LogSessionScreen(
 ) {
     val workout by viewModel.workout.collectAsState()
     val logState by viewModel.logState.collectAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    var sessionDateMillis by remember { mutableStateOf(0L) }
 
     LaunchedEffect(workoutId) {
         viewModel.loadWorkout(workoutId)
+        sessionDateMillis = viewModel.getSessionDate()
     }
 
     // Refresh when returning from edit exercises screen
@@ -139,6 +146,17 @@ fun LogSessionScreen(
                     FilledTonalIconButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showDatePicker = true
+                        },
+                        modifier = Modifier.size(wideSize),
+                        shapes = IconButtonDefaults.shapes()
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "Change date")
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onEditExercises(workoutId)
                         },
                         modifier = Modifier.size(wideSize),
@@ -185,6 +203,35 @@ fun LogSessionScreen(
                     onRemoveSet = { viewModel.removeSet(exerciseIndex) }
                 )
             }
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = sessionDateMillis
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        // DatePicker returns UTC midnight — extract date parts in UTC,
+                        // then build local time preserving current hour/minute
+                        val utcCal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+                        utcCal.timeInMillis = millis
+                        val localCal = java.util.Calendar.getInstance()
+                        localCal.set(utcCal.get(java.util.Calendar.YEAR), utcCal.get(java.util.Calendar.MONTH), utcCal.get(java.util.Calendar.DAY_OF_MONTH))
+                        sessionDateMillis = localCal.timeInMillis
+                        viewModel.setSessionDate(localCal.timeInMillis)
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
