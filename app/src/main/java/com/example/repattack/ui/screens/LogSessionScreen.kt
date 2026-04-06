@@ -274,11 +274,13 @@ private fun ExerciseLogCard(
             val allCompleted = state.sets.all { it.completed }
             val haptic = LocalHapticFeedback.current
 
-            // Stronger haptic when all sets become completed (via individual checks)
+            // Stronger haptic when all sets become completed — skip initial composition
+            var previousAllCompleted by remember { mutableStateOf(allCompleted) }
             LaunchedEffect(allCompleted) {
-                if (allCompleted && state.sets.isNotEmpty()) {
+                if (allCompleted && !previousAllCompleted && state.sets.isNotEmpty()) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
+                previousAllCompleted = allCompleted
             }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
