@@ -14,8 +14,9 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -46,6 +47,7 @@ private fun tabIndex(dest: androidx.navigation.NavDestination?): Int {
     return topLevelRoutes.indexOfFirst { dest.hasRoute(it.route::class) }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -61,11 +63,9 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ) {
+                        ShortNavigationBar {
                             topLevelRoutes.forEach { route ->
-                                NavigationBarItem(
+                                ShortNavigationBarItem(
                                     icon = { Icon(route.icon, contentDescription = route.label) },
                                     label = { Text(route.label) },
                                     selected = currentDestination?.hasRoute(route.route::class) == true,
