@@ -114,7 +114,14 @@ fun WorkoutDetailScreen(
                 scrollBehavior = scrollBehavior,
                 collapsedHeight = 64.dp,
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    val haptic = LocalHapticFeedback.current
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onBack()
+                        },
+                        shapes = IconButtonDefaults.shapes()
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

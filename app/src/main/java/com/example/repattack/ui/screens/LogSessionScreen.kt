@@ -26,9 +26,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -123,7 +122,14 @@ fun LogSessionScreen(
                 scrollBehavior = scrollBehavior,
                 collapsedHeight = 64.dp,
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    val haptic = LocalHapticFeedback.current
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onBack()
+                        },
+                        shapes = IconButtonDefaults.shapes()
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -218,19 +224,21 @@ private fun ExerciseLogCard(
                     modifier = Modifier.weight(1f)
                 )
                 if (exercise.url.isNotBlank()) {
-                    IconButton(
+                    val hapticLink = LocalHapticFeedback.current
+                    FilledTonalIconButton(
                         onClick = {
+                            hapticLink.performHapticFeedback(HapticFeedbackType.LongPress)
                             val url = if (exercise.url.startsWith("http")) exercise.url
                                 else "https://${exercise.url}"
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                         },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(36.dp),
+                        shapes = IconButtonDefaults.shapes()
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.OpenInNew,
+                            Icons.Default.Link,
                             contentDescription = "Open link",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -292,7 +300,7 @@ private fun ExerciseLogCard(
                     )
                 ) {
                     Icon(
-                        Icons.Filled.Check,
+                        Icons.Default.Check,
                         contentDescription = if (allCompleted) "Uncheck all" else "Check all",
                         modifier = Modifier.size(16.dp)
                     )
@@ -482,7 +490,7 @@ private fun SetRow(
             )
         ) {
             Icon(
-                Icons.Filled.Check,
+                Icons.Default.Check,
                 contentDescription = if (set.completed) "Completed" else "Mark complete",
                 modifier = Modifier.size(16.dp)
             )
