@@ -31,7 +31,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MediumExtendedFloatingActionButton
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -88,6 +91,9 @@ fun WorkoutsScreen(
     var lastClickTime by remember { mutableStateOf(0L) }
 
     val haptic = LocalHapticFeedback.current
+    val lazyListState = rememberLazyListState()
+    val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
+        lazyListState.firstVisibleItemScrollOffset > 0
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -108,7 +114,7 @@ fun WorkoutsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            SmallExtendedFloatingActionButton(
                 onClick = {
                     val now = System.currentTimeMillis()
                     if (now - lastClickTime > 500) {
@@ -116,11 +122,12 @@ fun WorkoutsScreen(
                         showAddSheet = true
                     }
                 },
+                expanded = !isScrolled,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Add") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add workout")
-            }
+            )
         }
     ) { innerPadding ->
         if (workouts.isEmpty()) {
@@ -137,7 +144,6 @@ fun WorkoutsScreen(
                 )
             }
         } else {
-            val lazyListState = rememberLazyListState()
             val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
                 viewModel.moveWorkout(from.index, to.index)
             }
@@ -146,7 +152,7 @@ fun WorkoutsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(workouts.size, key = { workouts[it].id }) { index ->

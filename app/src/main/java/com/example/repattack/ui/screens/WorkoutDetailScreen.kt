@@ -28,7 +28,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MediumExtendedFloatingActionButton
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +83,9 @@ fun WorkoutDetailScreen(
     var showEditWorkoutSheet by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
+    val lazyListState = rememberLazyListState()
+    val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
+        lazyListState.firstVisibleItemScrollOffset > 0
 
     LaunchedEffect(workoutId) {
         viewModel.loadWorkout(workoutId)
@@ -117,13 +123,14 @@ fun WorkoutDetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            SmallExtendedFloatingActionButton(
                 onClick = { showAddExerciseDialog = true },
+                expanded = !isScrolled,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Add") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add exercise")
-            }
+            )
         }
     ) { innerPadding ->
         if (exercises.isEmpty()) {
@@ -140,7 +147,6 @@ fun WorkoutDetailScreen(
                 )
             }
         } else {
-            val lazyListState = rememberLazyListState()
             val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
                 viewModel.moveExercise(from.index, to.index)
             }
@@ -149,7 +155,7 @@ fun WorkoutDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(exercises.size, key = { exercises[it].id }) { index ->
