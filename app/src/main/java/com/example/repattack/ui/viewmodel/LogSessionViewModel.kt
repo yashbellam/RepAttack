@@ -64,7 +64,14 @@ class LogSessionViewModel(
                 val existing = currentMap[exercise.id]
                 if (existing != null) {
                     // Preserve logged sets, update exercise metadata
-                    existing.copy(exercise = exercise)
+                    val newNumSets = exercise.targetSets ?: 3
+                    val oldSets = existing.sets
+                    val updatedSets = when {
+                        oldSets.size < newNumSets -> oldSets + List(newNumSets - oldSets.size) { SetEntry() }
+                        oldSets.size > newNumSets -> oldSets.take(newNumSets)
+                        else -> oldSets
+                    }
+                    existing.copy(exercise = exercise, sets = updatedSets)
                 } else {
                     // New exercise — load from last session
                     val numSets = exercise.targetSets ?: 3
@@ -88,7 +95,7 @@ class LogSessionViewModel(
                 }
             }
             
-            if (newLogState.map { it.exercise } != _logState.value.map { it.exercise }) {
+            if (newLogState != _logState.value) {
                 _logState.value = newLogState
             }
         }
