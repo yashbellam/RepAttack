@@ -172,7 +172,7 @@ fun WorkoutsScreen(
                             onDelete = { viewModel.deleteWorkout(workout) },
                             dragModifier = Modifier
                                 .draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate) }
                                 )
                         )
                     }

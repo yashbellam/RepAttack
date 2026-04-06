@@ -273,6 +273,13 @@ private fun ExerciseLogCard(
             // Column headers — aligned to match SetRow layout
             val allCompleted = state.sets.all { it.completed }
             val haptic = LocalHapticFeedback.current
+
+            // Stronger haptic when all sets become completed (via individual checks)
+            LaunchedEffect(allCompleted) {
+                if (allCompleted && state.sets.isNotEmpty()) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -289,7 +296,10 @@ private fun ExerciseLogCard(
                 OutlinedIconToggleButton(
                     checked = allCompleted,
                     onCheckedChange = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(
+                            if (allCompleted) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                        )
+                        // LaunchedEffect adds a bonus LongPress when allCompleted becomes true
                         onToggleAll()
                     },
                     modifier = Modifier.size(32.dp),
@@ -387,7 +397,7 @@ private fun SetRow(
         // Weight: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(-2.5) },
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(-2.5) },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -418,7 +428,7 @@ private fun SetRow(
                 }
             )
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onWeightDelta(2.5) },
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(2.5) },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -433,7 +443,7 @@ private fun SetRow(
         // Reps: [–] editable [+]
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(-1) },
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(-1) },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -464,7 +474,7 @@ private fun SetRow(
                 }
             )
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onRepsDelta(1) },
+                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(1) },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -479,7 +489,9 @@ private fun SetRow(
         OutlinedIconToggleButton(
             checked = set.completed,
             onCheckedChange = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                haptic.performHapticFeedback(
+                    if (set.completed) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                )
                 onToggleCompleted()
             },
             modifier = Modifier.size(32.dp),
