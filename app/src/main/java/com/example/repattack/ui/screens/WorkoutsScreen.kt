@@ -2,15 +2,21 @@ package com.example.repattack.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,6 +59,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,6 +86,8 @@ fun WorkoutsScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var workoutToEdit by remember { mutableStateOf<Workout?>(null) }
     var lastClickTime by remember { mutableStateOf(0L) }
+
+    val haptic = LocalHapticFeedback.current
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -147,7 +161,10 @@ fun WorkoutsScreen(
                             onEdit = { workoutToEdit = workout },
                             onDuplicate = { viewModel.duplicateWorkout(workout) },
                             onDelete = { viewModel.deleteWorkout(workout) },
-                            dragModifier = Modifier.draggableHandle()
+                            dragModifier = Modifier
+                                .draggableHandle(
+                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+                                )
                         )
                     }
                 }
@@ -223,7 +240,6 @@ private fun WorkoutCard(
         enableDismissFromStartToEnd = false
     ) {
         Card(
-            onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -232,17 +248,36 @@ private fun WorkoutCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 4.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .height(IntrinsicSize.Min),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.DragHandle,
-                    contentDescription = "Drag to reorder",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = dragModifier.size(24.dp)
-                )
-                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                // Full-height drag handle strip — outside clickable area
+                Box(
+                    modifier = dragModifier
+                        .fillMaxHeight()
+                        .width(32.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⠿",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                // Clickable content area
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onClick() }
+                        .padding(top = 16.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                    ) {
                     Text(
                         text = workout.name,
                         style = MaterialTheme.typography.titleMedium
@@ -269,6 +304,7 @@ private fun WorkoutCard(
                         contentDescription = "Edit",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
                 }
             }
         }
