@@ -1,32 +1,25 @@
 package com.example.repattack.ui.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 
@@ -37,6 +30,7 @@ fun SettingsScreen(
     onImport: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val itemCount = 2
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -59,9 +53,9 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
         ) {
-            // Section header
             item {
                 Text(
                     text = "Data",
@@ -70,31 +64,30 @@ fun SettingsScreen(
                     modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
                 )
             }
-            // Grouped list items in a single card
             item {
-                Card(
-                    colors = CardDefaults.cardColors(
+                SegmentedListItem(
+                    onClick = onExport,
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = itemCount),
+                    colors = ListItemDefaults.segmentedColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
+                    ),
+                    supportingContent = { Text("Save all workouts, exercises, and logs as JSON") },
+                    leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
                 ) {
-                    ListItem(
-                        headlineContent = { Text("Export data") },
-                        supportingContent = { Text("Save all workouts, exercises, and logs as JSON") },
-                        leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
-                        modifier = Modifier.clickable { onExport() },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    ListItem(
-                        headlineContent = { Text("Import data") },
-                        supportingContent = { Text("Restore from a JSON backup (replaces all data)") },
-                        leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
-                        modifier = Modifier.clickable { onImport() },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    )
+                    Text("Export data")
+                }
+            }
+            item {
+                SegmentedListItem(
+                    onClick = onImport,
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = itemCount),
+                    colors = ListItemDefaults.segmentedColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    supportingContent = { Text("Restore from a JSON backup (replaces all data)") },
+                    leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                ) {
+                    Text("Import data")
                 }
             }
         }
