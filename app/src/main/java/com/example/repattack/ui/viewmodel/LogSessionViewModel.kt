@@ -29,7 +29,8 @@ data class ExerciseLogState(
 )
 
 class LogSessionViewModel(
-    private val repository: RepAttackRepository
+    private val repository: RepAttackRepository,
+    private val onLogChanged: (() -> Unit)? = null
 ) : ViewModel() {
 
     private val _workoutId = MutableStateFlow<Long?>(null)
@@ -213,6 +214,7 @@ class LogSessionViewModel(
                         reps = current.reps
                     )
                 )
+                onLogChanged?.invoke()
                 // Update state with saved ID
                 _logState.value = _logState.value.toMutableList().also { list ->
                     val es = list[exerciseIndex]
@@ -227,6 +229,7 @@ class LogSessionViewModel(
             if (logId != null) {
                 viewModelScope.launch {
                     repository.deleteLogById(logId)
+                    onLogChanged?.invoke()
                 }
             }
             // Update state
@@ -271,6 +274,7 @@ class LogSessionViewModel(
             viewModelScope.launch {
                 val savedIds = exerciseState.sets.mapNotNull { it.savedLogId }
                 savedIds.forEach { repository.deleteLogById(it) }
+                onLogChanged?.invoke()
                 _logState.value = _logState.value.toMutableList().also { list ->
                     if (exerciseIndex in list.indices) {
                         val current = list[exerciseIndex]
@@ -297,6 +301,7 @@ class LogSessionViewModel(
                         set.copy(completed = true, savedLogId = logId)
                     } else set
                 }
+                onLogChanged?.invoke()
                 _logState.value = _logState.value.toMutableList().also { list ->
                     if (exerciseIndex in list.indices) {
                         list[exerciseIndex] = list[exerciseIndex].copy(sets = newSets)

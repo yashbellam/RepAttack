@@ -70,6 +70,12 @@ dependencies {
     // Drag to reorder
     implementation(libs.reorderable)
 
+    // Shared module (sync models)
+    implementation(project(":shared"))
+
+    // Wearable DataLayer (phone → watch sync)
+    implementation(libs.play.services.wearable)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)

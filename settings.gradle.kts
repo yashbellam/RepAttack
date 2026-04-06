@@ -24,3 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Rep Attack"
 include(":app")
+include(":shared")
+include(":wear")
