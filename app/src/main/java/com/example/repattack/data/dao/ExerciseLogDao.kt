@@ -13,6 +13,9 @@ interface ExerciseLogDao {
     @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId ORDER BY date DESC")
     fun getByExerciseId(exerciseId: Long): Flow<List<ExerciseLog>>
 
+    @Query("SELECT * FROM exercise_logs ORDER BY date DESC")
+    suspend fun getAllOnce(): List<ExerciseLog>
+
     /** Returns the most recent log for each set number of an exercise. */
     @Query("""
         SELECT * FROM exercise_logs e1

@@ -25,8 +25,14 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises ORDER BY name ASC")
     fun getAll(): Flow<List<Exercise>>
 
+    @Query("SELECT * FROM exercises ORDER BY workoutId ASC, orderIndex ASC")
+    suspend fun getAllOnce(): List<Exercise>
+
     @Insert
     suspend fun insert(exercise: Exercise): Long
+
+    @Insert
+    suspend fun insertAll(exercises: List<Exercise>)
 
     @Update
     suspend fun update(exercise: Exercise)

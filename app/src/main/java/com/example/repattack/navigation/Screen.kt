@@ -10,6 +10,7 @@ sealed interface Screen {
     @Serializable data object Workouts : Screen
     @Serializable data object Log : Screen
     @Serializable data object Stats : Screen
+    @Serializable data object Settings : Screen
     @Serializable data class WorkoutDetail(val workoutId: Long) : Screen
     @Serializable data class LogSession(val workoutId: Long) : Screen
 }
