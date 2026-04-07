@@ -58,7 +58,6 @@ fun WorkoutListScreen(
                 }
             } else {
                 items(workouts, key = { it.id }) { workout ->
-                    val exerciseCount = workout.exercises.size
                     Button(
                         onClick = { onWorkoutClick(workout.id) },
                         modifier = Modifier
@@ -72,17 +71,15 @@ fun WorkoutListScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                         },
-                        secondaryLabel = {
-                            Text(
-                                text = if (workout.description.isNotBlank()) {
-                                    workout.description
-                                } else {
-                                    "$exerciseCount exercise${if (exerciseCount != 1) "s" else ""}"
-                                },
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        secondaryLabel = if (workout.description.isNotBlank()) {
+                            {
+                                Text(
+                                    text = workout.description,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        } else null
                     )
                 }
             }
