@@ -170,7 +170,20 @@ fun LogSessionScreen(
         }
     ) { innerPadding ->
         val focusManager = LocalFocusManager.current
-        LazyColumn(
+        if (logState.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No exercises yet.\nTap the edit button to add some!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
@@ -204,11 +217,21 @@ fun LogSessionScreen(
                 )
             }
         }
+        }
     }
 
     if (showDatePicker) {
+        // Convert local timestamp to UTC for DatePicker
+        val initialUtc = remember(sessionDateMillis) {
+            val localCal = java.util.Calendar.getInstance()
+            localCal.timeInMillis = sessionDateMillis
+            val utcCal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+            utcCal.set(localCal.get(java.util.Calendar.YEAR), localCal.get(java.util.Calendar.MONTH), localCal.get(java.util.Calendar.DAY_OF_MONTH), 0, 0, 0)
+            utcCal.set(java.util.Calendar.MILLISECOND, 0)
+            utcCal.timeInMillis
+        }
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = sessionDateMillis
+            initialSelectedDateMillis = initialUtc
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },

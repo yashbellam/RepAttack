@@ -1,7 +1,17 @@
 package com.example.repattack.ui.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,8 +38,10 @@ import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MediumExtendedFloatingActionButton
@@ -43,6 +56,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -50,16 +64,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -255,7 +281,7 @@ fun WorkoutDetailScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ExerciseCard(
     exercise: Exercise,
@@ -264,46 +290,113 @@ private fun ExerciseCard(
     onDelete: () -> Unit,
     dragModifier: Modifier = Modifier
 ) {
-    val dismissState = rememberSwipeToDismissBoxState()
+    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val deleteButtonWidth = 72.dp
+    val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
+    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
 
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+    // Swipe away then delete
+    fun performDelete() {
+        scope.launch {
+            isDeleting = true
+            // Long vibration
+            val vibrator = context.getSystemService(android.os.Vibrator::class.java)
+            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            // Swipe off screen
+            offsetX.animateTo(-screenWidthPx, tween(250))
             onDelete()
-            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
         }
     }
 
-    SwipeToDismissBox(
-        state = dismissState,
-        backgroundContent = {
-            val color by animateColorAsState(
-                targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart)
-                    MaterialTheme.colorScheme.errorContainer
-                else MaterialTheme.colorScheme.surface,
-                label = "swipe-bg"
-            )
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete exercise?") },
+            text = { Text("Are you sure you want to delete \"${exercise.name}\"?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    performDelete()
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
+                }) { Text("Cancel") }
+            }
+        )
+    }
+
+    val swipeFraction = (-offsetX.value / deleteButtonWidthPx).coerceIn(0f, 1f)
+    val revealColor = lerp(
+        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.errorContainer,
+        swipeFraction
+    )
+
+    if (!isDeleting || offsetX.value > -screenWidthPx) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // Red background — extends full width so it fills behind swipe-away
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(color, shape = MaterialTheme.shapes.medium)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onErrorContainer
-                )
-            }
-        },
-        enableDismissFromStartToEnd = false
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    .matchParentSize()
+                    .background(revealColor, shape = MaterialTheme.shapes.medium)
             )
-        ) {
+
+            // Delete button — outside draggable so it receives taps
+            if (swipeFraction > 0.3f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(end = 16.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    FilledIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showDeleteDialog = true
+                        },
+                        shapes = IconButtonDefaults.shapes(),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
+                }
+            }
+
+            // Sliding card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                    .draggable(
+                        state = rememberDraggableState { delta ->
+                            scope.launch {
+                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                offsetX.snapTo(newOffset)
+                            }
+                        },
+                        orientation = Orientation.Horizontal,
+                        onDragStopped = {
+                            scope.launch {
+                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                offsetX.animateTo(target, tween(250, easing = FastOutSlowInEasing))
+                            }
+                        }
+                    ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -385,5 +478,6 @@ private fun ExerciseCard(
                 Spacer(modifier = Modifier.width(12.dp))
             }
         }
+    }
     }
 }

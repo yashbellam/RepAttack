@@ -112,7 +112,7 @@ fun StatsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No exercises yet.\nLog some workouts first!",
+                    text = "No exercises yet.\nLog a workout to see stats!",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -166,6 +166,19 @@ fun StatsScreen(
                                 text = "Log at least 2 sessions to see the chart",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Empty state
+                    if (sessions.isEmpty()) {
+                        item {
+                            Text(
+                                text = "No sessions logged yet.\nLog a workout to see stats!",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp)
                             )
                         }
                     }
@@ -350,6 +363,13 @@ private fun SessionCard(
                     text = "Top set: ${session.topSetDisplay}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (session.totalVolume > 0) {
+                Text(
+                    text = "Volume: ${session.totalVolume.toLong()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
