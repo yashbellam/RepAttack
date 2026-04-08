@@ -214,6 +214,12 @@ fun WorkoutDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Exercises",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                )
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -227,7 +233,7 @@ fun WorkoutDetailScreen(
             }
         } else {
             val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-                viewModel.moveExercise(from.index, to.index)
+                viewModel.moveExercise(from.index - 1, to.index - 1)
             }
             LazyColumn(
                 state = lazyListState,
@@ -266,6 +272,12 @@ fun WorkoutDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Exercises",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
                     }
                 }
                 items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
