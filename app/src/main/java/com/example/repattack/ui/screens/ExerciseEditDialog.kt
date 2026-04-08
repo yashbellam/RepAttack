@@ -27,13 +27,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseEditDialog(
-    exercise: Exercise?,
+    exercise: WorkoutExerciseWithCatalog?,
+    isNewAdd: Boolean = exercise == null,
     onDismiss: () -> Unit,
     onConfirm: (
         name: String,
@@ -46,23 +47,26 @@ fun ExerciseEditDialog(
     ) -> Unit
 ) {
     var name by remember { mutableStateOf(exercise?.name ?: "") }
-    var targetSets by remember { mutableStateOf(exercise?.targetSets?.toString() ?: "") }
-    var minReps by remember { mutableStateOf(exercise?.minReps?.toString() ?: "") }
-    var maxReps by remember { mutableStateOf(exercise?.maxReps?.toString() ?: "") }
-    var restTime by remember { mutableStateOf(exercise?.restTime ?: "") }
+    var targetSets by remember { mutableStateOf(exercise?.workoutExercise?.targetSets?.toString() ?: "") }
+    var minReps by remember { mutableStateOf(exercise?.workoutExercise?.minReps?.toString() ?: "") }
+    var maxReps by remember { mutableStateOf(exercise?.workoutExercise?.maxReps?.toString() ?: "") }
+    var restTime by remember { mutableStateOf(exercise?.workoutExercise?.restTime ?: "") }
     var notes by remember { mutableStateOf(exercise?.notes ?: "") }
     var url by remember { mutableStateOf(exercise?.url ?: "") }
 
-    val isEditing = exercise != null
+    val isEditing = !isNewAdd
+    val hasCatalogPrefill = isNewAdd && exercise != null
     val focusRequester = remember { FocusRequester() }
+    val setsFocusRequester = remember { FocusRequester() }
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
-    LaunchedEffect(isEditing) {
+    LaunchedEffect(isEditing, hasCatalogPrefill) {
         if (!isEditing) {
             delay(300)
-            focusRequester.requestFocus()
+            if (hasCatalogPrefill) setsFocusRequester.requestFocus()
+            else focusRequester.requestFocus()
         }
     }
 
@@ -90,6 +94,8 @@ fun ExerciseEditDialog(
                 onValueChange = { name = it },
                 label = { Text("Exercise name") },
                 singleLine = true,
+                readOnly = hasCatalogPrefill,
+                enabled = !hasCatalogPrefill,
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
             )
 
@@ -99,7 +105,7 @@ fun ExerciseEditDialog(
                 label = { Text("Sets") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().focusRequester(setsFocusRequester)
             )
 
             Row(
@@ -140,6 +146,8 @@ fun ExerciseEditDialog(
                 onValueChange = { notes = it },
                 label = { Text("Notes") },
                 maxLines = 3,
+                readOnly = hasCatalogPrefill,
+                enabled = !hasCatalogPrefill,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -149,6 +157,8 @@ fun ExerciseEditDialog(
                 label = { Text("Link") },
                 placeholder = { Text("e.g. youtube.com/watch?v=...") },
                 singleLine = true,
+                readOnly = hasCatalogPrefill,
+                enabled = !hasCatalogPrefill,
                 modifier = Modifier.fillMaxWidth()
             )
 

@@ -2,8 +2,10 @@ package com.example.repattack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.data.model.Workout
+import com.example.repattack.data.model.WorkoutExercise
+import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import com.example.repattack.data.repository.RepAttackRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,25 +23,23 @@ class WorkoutDetailViewModel(
 
     private val _workoutId = MutableStateFlow<Long?>(null)
     private val _workout = MutableStateFlow<Workout?>(null)
-
-    /** The workout being viewed/edited. */
     val workout: StateFlow<Workout?> = _workout.asStateFlow()
 
-    /** Exercises from DB — used to seed the local list. */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val dbExercises: StateFlow<List<Exercise>> = _workoutId
+    private val dbExercises: StateFlow<List<WorkoutExerciseWithCatalog>> = _workoutId
         .flatMapLatest { id ->
             if (id != null) repository.getExercisesForWorkout(id)
             else flowOf(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Local exercise list — can be reordered without DB round-trip flicker. */
-    private val _exercises = MutableStateFlow<List<Exercise>>(emptyList())
-    val exercises: StateFlow<List<Exercise>> = _exercises.asStateFlow()
+    private val _exercises = MutableStateFlow<List<WorkoutExerciseWithCatalog>>(emptyList())
+    val exercises: StateFlow<List<WorkoutExerciseWithCatalog>> = _exercises.asStateFlow()
+
+    val allCatalogExercises: StateFlow<List<ExerciseCatalog>> = repository.getAllCatalogExercises()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
-        // Sync DB exercises to local list (only when not actively reordering)
         viewModelScope.launch {
             dbExercises.collect { dbList ->
                 if (_exercises.value.isEmpty() || !isDragging) {
@@ -69,49 +69,79 @@ class WorkoutDetailViewModel(
         url: String
     ) {
         viewModelScope.launch {
+            // Find or create catalog entry
+            var catalog = repository.getCatalogExerciseByName(name)
+            if (catalog == null) {
+                val catalogId = repository.insertCatalogExercise(
+                    ExerciseCatalog(name = name, url = url, notes = notes)
+                )
+                catalog = ExerciseCatalog(id = catalogId, name = name, url = url, notes = notes)
+            }
+
             val currentExercises = exercises.value
-            repository.insertExercise(
-                Exercise(
+            repository.insertWorkoutExercise(
+                WorkoutExercise(
                     workoutId = workoutId,
-                    name = name,
+                    exerciseId = catalog.id,
                     targetSets = targetSets,
                     minReps = minReps,
                     maxReps = maxReps,
                     restTime = restTime,
-                    notes = notes,
-                    url = url,
                     orderIndex = currentExercises.size
                 )
             )
         }
     }
 
-    fun updateExercise(exercise: Exercise) {
+    /** Add an existing catalog exercise to this workout with default settings. */
+    fun addExerciseFromCatalog(workoutId: Long, catalog: ExerciseCatalog) {
         viewModelScope.launch {
-            repository.updateExercise(exercise)
+            val currentExercises = exercises.value
+            repository.insertWorkoutExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = catalog.id,
+                    orderIndex = currentExercises.size
+                )
+            )
         }
     }
 
-    fun deleteExercise(exercise: Exercise) {
+    fun updateExercise(exerciseWithCatalog: WorkoutExerciseWithCatalog, name: String, url: String, notes: String = "") {
         viewModelScope.launch {
-            repository.deleteExercise(exercise)
+            val catalog = repository.getCatalogExerciseById(exerciseWithCatalog.workoutExercise.exerciseId)
+            if (catalog != null) {
+                repository.updateCatalogExercise(catalog.copy(name = name, url = url, notes = notes))
+            }
+            // Update per-workout settings
+            repository.updateWorkoutExercise(exerciseWithCatalog.workoutExercise)
         }
     }
 
-    fun duplicateExercise(exercise: Exercise) {
+    fun updateWorkoutExercise(exercise: WorkoutExercise) {
+        viewModelScope.launch {
+            repository.updateWorkoutExercise(exercise)
+        }
+    }
+
+    fun deleteExercise(exercise: WorkoutExerciseWithCatalog) {
+        viewModelScope.launch {
+            repository.deleteWorkoutExercise(exercise.workoutExercise)
+        }
+    }
+
+    fun duplicateExercise(exercise: WorkoutExerciseWithCatalog) {
         viewModelScope.launch {
             val allExercises = _exercises.value
-            val insertIndex = allExercises.indexOfFirst { it.id == exercise.id } + 1
+            val insertIndex = allExercises.indexOfFirst { it.workoutExercise.id == exercise.workoutExercise.id } + 1
 
-            // Shift exercises after insert point
-            val toShift = allExercises.filter { it.orderIndex >= insertIndex }
-                .map { it.copy(orderIndex = it.orderIndex + 1) }
-            if (toShift.isNotEmpty()) repository.updateExercises(toShift)
+            val toShift = allExercises.filter { it.workoutExercise.orderIndex >= insertIndex }
+                .map { it.workoutExercise.copy(orderIndex = it.workoutExercise.orderIndex + 1) }
+            if (toShift.isNotEmpty()) repository.updateWorkoutExercises(toShift)
 
-            repository.insertExercise(
-                exercise.copy(
+            repository.insertWorkoutExercise(
+                exercise.workoutExercise.copy(
                     id = 0,
-                    name = "${exercise.name} (copy)",
                     orderIndex = insertIndex
                 )
             )
@@ -134,14 +164,13 @@ class WorkoutDetailViewModel(
         _exercises.value = current
     }
 
-    /** Call when drag ends to persist the new order to DB. */
     fun commitReorder() {
         isDragging = false
-        val updated = _exercises.value.mapIndexed { index, exercise ->
-            exercise.copy(orderIndex = index)
+        val updated = _exercises.value.mapIndexed { index, ewc ->
+            ewc.workoutExercise.copy(orderIndex = index)
         }
         viewModelScope.launch {
-            repository.updateExercises(updated)
+            repository.updateWorkoutExercises(updated)
         }
     }
 }

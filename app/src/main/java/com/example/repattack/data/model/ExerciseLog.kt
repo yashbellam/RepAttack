@@ -7,13 +7,13 @@ import androidx.room.PrimaryKey
 
 /**
  * A single logged set — e.g. "Bench Press, set 2, 135 lbs, 8 reps".
- * Created during a workout session.
+ * Links to ExerciseCatalog so history is shared across workouts.
  */
 @Entity(
     tableName = "exercise_logs",
     foreignKeys = [
         ForeignKey(
-            entity = Exercise::class,
+            entity = ExerciseCatalog::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
             onDelete = ForeignKey.CASCADE
@@ -27,6 +27,5 @@ data class ExerciseLog(
     val date: Long = System.currentTimeMillis(),
     val setNumber: Int,
     val weight: Double? = null,
-    val reps: Int? = null,
-    val notes: String = ""
+    val reps: Int? = null
 )

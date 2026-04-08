@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerciseLogDao {
-    /** Returns all logs for an exercise, newest first. */
+    /** Returns all logs for a catalog exercise, newest first. */
     @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId ORDER BY date DESC")
-    fun getByExerciseId(exerciseId: Long): Flow<List<ExerciseLog>>
+    fun getByexerciseId(exerciseId: Long): Flow<List<ExerciseLog>>
 
     @Query("SELECT * FROM exercise_logs ORDER BY date DESC")
     suspend fun getAllOnce(): List<ExerciseLog>
 
-    /** Returns the most recent log for each set number of an exercise. */
+    /** Returns the most recent log for each set number of a catalog exercise. */
     @Query("""
         SELECT * FROM exercise_logs e1
         WHERE exerciseId = :exerciseId
@@ -27,10 +27,6 @@ interface ExerciseLogDao {
         ORDER BY setNumber ASC
     """)
     suspend fun getLastSessionForExercise(exerciseId: Long): List<ExerciseLog>
-
-    /** Returns logs for a specific exercise on a specific date (for loading a session). */
-    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId AND date >= :startOfDay AND date < :endOfDay ORDER BY setNumber ASC")
-    fun getByExerciseIdAndDate(exerciseId: Long, startOfDay: Long, endOfDay: Long): Flow<List<ExerciseLog>>
 
     @Insert
     suspend fun insert(log: ExerciseLog): Long
@@ -43,10 +39,6 @@ interface ExerciseLogDao {
 
     @Query("DELETE FROM exercise_logs WHERE id = :id")
     suspend fun deleteById(id: Long)
-
-    /** Deletes all logs for a specific exercise on a date range (re-logging a session). */
-    @Query("DELETE FROM exercise_logs WHERE exerciseId = :exerciseId AND date >= :startOfDay AND date < :endOfDay")
-    suspend fun deleteByExerciseIdAndDate(exerciseId: Long, startOfDay: Long, endOfDay: Long)
 
     @Query("UPDATE exercise_logs SET date = :newDate WHERE date = :oldDate")
     suspend fun updateSessionDate(oldDate: Long, newDate: Long)

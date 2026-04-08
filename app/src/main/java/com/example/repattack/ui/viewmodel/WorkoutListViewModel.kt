@@ -2,8 +2,8 @@ package com.example.repattack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repattack.data.model.Exercise
 import com.example.repattack.data.model.Workout
+import com.example.repattack.data.model.WorkoutExercise
 import com.example.repattack.data.repository.RepAttackRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -77,9 +77,9 @@ class WorkoutListViewModel(
             if (updated.isNotEmpty()) repository.updateWorkouts(updated)
 
             val exercises = repository.getExercisesForWorkoutOnce(workout.id)
-            exercises.forEach { exercise ->
-                repository.insertExercise(
-                    exercise.copy(id = 0, workoutId = newId)
+            exercises.forEach { ewc ->
+                repository.insertWorkoutExercise(
+                    ewc.workoutExercise.copy(id = 0, workoutId = newId)
                 )
             }
         }

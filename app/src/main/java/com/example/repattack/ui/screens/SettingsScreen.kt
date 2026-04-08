@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 fun SettingsScreen(
     onExport: () -> Unit = {},
     onImport: () -> Unit = {},
+    onManageExercises: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val itemCount = 2
@@ -88,6 +90,29 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
                 ) {
                     Text("Import data")
+                }
+            }
+
+            // Library section
+            item {
+                Text(
+                    text = "Library",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                )
+            }
+            item {
+                SegmentedListItem(
+                    onClick = onManageExercises,
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    colors = ListItemDefaults.segmentedColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    supportingContent = { Text("View, edit, or delete exercises from your catalog") },
+                    leadingContent = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+                ) {
+                    Text("Exercise catalog")
                 }
             }
         }

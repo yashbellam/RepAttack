@@ -272,7 +272,7 @@ private fun ExerciseLogCard(
     onAddSet: () -> Unit,
     onRemoveSet: () -> Unit
 ) {
-    val exercise = state.exercise
+    val exercise = state.exerciseWithCatalog
     val context = LocalContext.current
 
     Card(
@@ -314,13 +314,13 @@ private fun ExerciseLogCard(
                 }
             }
             val target = buildList {
-                exercise.targetSets?.let { add("$it sets") }
-                val min = exercise.minReps
-                val max = exercise.maxReps
+                exercise.workoutExercise.targetSets?.let { add("$it sets") }
+                val min = exercise.workoutExercise.minReps
+                val max = exercise.workoutExercise.maxReps
                 if (min != null && max != null && min != max) add("$min-$max reps")
                 else if (min != null) add("$min reps")
                 else if (max != null) add("$max reps")
-                if (exercise.restTime.isNotBlank()) add("${exercise.restTime} rest")
+                if (exercise.workoutExercise.restTime.isNotBlank()) add("${exercise.workoutExercise.restTime} rest")
             }
             if (target.isNotEmpty()) {
                 Text(
@@ -593,11 +593,15 @@ private fun PreviewExerciseLogCard() {
     com.example.repattack.ui.theme.RepAttackTheme {
         ExerciseLogCard(
             state = ExerciseLogState(
-                exercise = com.example.repattack.data.model.Exercise(
-                    id = 1, workoutId = 1, name = "Bench Press",
-                    targetSets = 3, minReps = 6, maxReps = 8,
-                    restTime = "2-3 min", notes = "v shape - don't flare out",
-                    url = "https://youtu.be/example"
+                exerciseWithCatalog = com.example.repattack.data.model.WorkoutExerciseWithCatalog(
+                    workoutExercise = com.example.repattack.data.model.WorkoutExercise(
+                        id = 1, workoutId = 1, exerciseId = 1,
+                        targetSets = 3, minReps = 6, maxReps = 8,
+                        restTime = "2-3 min"
+                    ),
+                    name = "Bench Press",
+                    url = "https://youtu.be/example",
+                    notes = "v shape - don't flare out"
                 ),
                 sets = listOf(
                     SetEntry(weight = 60.0, reps = 8, completed = true),

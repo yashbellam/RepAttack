@@ -1,16 +1,20 @@
 package com.example.repattack.data.repository
 
-import com.example.repattack.data.dao.ExerciseDao
+import com.example.repattack.data.dao.ExerciseCatalogDao
 import com.example.repattack.data.dao.ExerciseLogDao
 import com.example.repattack.data.dao.WorkoutDao
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.dao.WorkoutExerciseDao
+import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.data.model.ExerciseLog
 import com.example.repattack.data.model.Workout
+import com.example.repattack.data.model.WorkoutExercise
+import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import kotlinx.coroutines.flow.Flow
 
 class RepAttackRepository(
     private val workoutDao: WorkoutDao,
-    private val exerciseDao: ExerciseDao,
+    private val catalogDao: ExerciseCatalogDao,
+    private val workoutExerciseDao: WorkoutExerciseDao,
     private val exerciseLogDao: ExerciseLogDao
 ) {
     // -- Workouts --
@@ -24,23 +28,34 @@ class RepAttackRepository(
     suspend fun deleteWorkout(workout: Workout) = workoutDao.delete(workout)
     suspend fun clearAllWorkouts() = workoutDao.deleteAll()
 
-    // -- Exercises --
-    fun getExercisesForWorkout(workoutId: Long): Flow<List<Exercise>> =
-        exerciseDao.getByWorkoutId(workoutId)
-    fun getAllExercises(): Flow<List<Exercise>> = exerciseDao.getAll()
-    suspend fun getAllExercisesOnce(): List<Exercise> = exerciseDao.getAllOnce()
-    suspend fun getExercisesForWorkoutOnce(workoutId: Long): List<Exercise> =
-        exerciseDao.getByWorkoutIdOnce(workoutId)
-    suspend fun getExerciseById(id: Long): Exercise? = exerciseDao.getById(id)
-    suspend fun insertExercise(exercise: Exercise): Long = exerciseDao.insert(exercise)
-    suspend fun insertExercises(exercises: List<Exercise>) = exerciseDao.insertAll(exercises)
-    suspend fun updateExercise(exercise: Exercise) = exerciseDao.update(exercise)
-    suspend fun updateExercises(exercises: List<Exercise>) = exerciseDao.updateAll(exercises)
-    suspend fun deleteExercise(exercise: Exercise) = exerciseDao.delete(exercise)
+    // -- Exercise Catalog --
+    fun getAllCatalogExercises(): Flow<List<ExerciseCatalog>> = catalogDao.getAll()
+    suspend fun getAllCatalogExercisesOnce(): List<ExerciseCatalog> = catalogDao.getAllOnce()
+    suspend fun getCatalogExerciseById(id: Long): ExerciseCatalog? = catalogDao.getById(id)
+    suspend fun getCatalogExerciseByName(name: String): ExerciseCatalog? = catalogDao.getByName(name)
+    suspend fun insertCatalogExercise(exercise: ExerciseCatalog): Long = catalogDao.insert(exercise)
+    suspend fun insertCatalogExercises(exercises: List<ExerciseCatalog>) = catalogDao.insertAll(exercises)
+    suspend fun updateCatalogExercise(exercise: ExerciseCatalog) = catalogDao.update(exercise)
+    suspend fun deleteCatalogExercise(exercise: ExerciseCatalog) = catalogDao.delete(exercise)
+    suspend fun clearAllCatalogExercises() = catalogDao.deleteAll()
+
+    // -- Workout Exercises --
+    fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExerciseWithCatalog>> =
+        workoutExerciseDao.getByWorkoutId(workoutId)
+    suspend fun getExercisesForWorkoutOnce(workoutId: Long): List<WorkoutExerciseWithCatalog> =
+        workoutExerciseDao.getByWorkoutIdOnce(workoutId)
+    fun getAllUsedExercises(): Flow<List<ExerciseCatalog>> =
+        workoutExerciseDao.getAllUsedCatalogExercises()
+    suspend fun getWorkoutExerciseById(id: Long): WorkoutExercise? = workoutExerciseDao.getById(id)
+    suspend fun insertWorkoutExercise(exercise: WorkoutExercise): Long = workoutExerciseDao.insert(exercise)
+    suspend fun insertWorkoutExercises(exercises: List<WorkoutExercise>) = workoutExerciseDao.insertAll(exercises)
+    suspend fun updateWorkoutExercise(exercise: WorkoutExercise) = workoutExerciseDao.update(exercise)
+    suspend fun updateWorkoutExercises(exercises: List<WorkoutExercise>) = workoutExerciseDao.updateAll(exercises)
+    suspend fun deleteWorkoutExercise(exercise: WorkoutExercise) = workoutExerciseDao.delete(exercise)
 
     // -- Exercise Logs --
     fun getLogsForExercise(exerciseId: Long): Flow<List<ExerciseLog>> =
-        exerciseLogDao.getByExerciseId(exerciseId)
+        exerciseLogDao.getByexerciseId(exerciseId)
     suspend fun getAllLogsOnce(): List<ExerciseLog> = exerciseLogDao.getAllOnce()
     suspend fun getLastSessionForExercise(exerciseId: Long): List<ExerciseLog> =
         exerciseLogDao.getLastSessionForExercise(exerciseId)

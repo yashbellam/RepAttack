@@ -2,7 +2,7 @@ package com.example.repattack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.data.model.ExerciseLog
 import com.example.repattack.data.repository.RepAttackRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,7 +43,7 @@ class StatsViewModel(
     private val repository: RepAttackRepository
 ) : ViewModel() {
 
-    val allExercises: StateFlow<List<Exercise>> = repository.getAllExercises()
+    val allExercises: StateFlow<List<ExerciseCatalog>> = repository.getAllUsedExercises()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _selectedExerciseId = MutableStateFlow<Long?>(null)

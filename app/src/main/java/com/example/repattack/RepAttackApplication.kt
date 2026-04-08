@@ -18,7 +18,8 @@ class RepAttackApplication : Application() {
     val repository: RepAttackRepository by lazy {
         RepAttackRepository(
             database.workoutDao(),
-            database.exerciseDao(),
+            database.exerciseCatalogDao(),
+            database.workoutExerciseDao(),
             database.exerciseLogDao()
         )
     }
@@ -34,7 +35,7 @@ class RepAttackApplication : Application() {
         }
         // Auto-sync when exercises change (edits, reorder, add, delete)
         appScope.launch {
-            repository.getAllExercises()
+            repository.getAllCatalogExercises()
                 .drop(1)
                 .collectLatest { syncManager.syncToWatch() }
         }

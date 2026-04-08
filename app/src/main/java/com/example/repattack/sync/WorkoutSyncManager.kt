@@ -30,17 +30,17 @@ class WorkoutSyncManager(
                 id = workout.id,
                 name = workout.name,
                 description = workout.description,
-                exercises = exercises.map { ex ->
-                    val lastLogs = repository.getLastSessionForExercise(ex.id)
+                exercises = exercises.map { ewc ->
+                    val lastLogs = repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
                     SyncExercise(
-                        id = ex.id,
-                        name = ex.name,
-                        targetSets = ex.targetSets,
-                        minReps = ex.minReps,
-                        maxReps = ex.maxReps,
-                        restTime = ex.restTime,
-                        notes = ex.notes,
-                        orderIndex = ex.orderIndex,
+                        id = ewc.workoutExercise.exerciseId,
+                        name = ewc.name,
+                        targetSets = ewc.workoutExercise.targetSets,
+                        minReps = ewc.workoutExercise.minReps,
+                        maxReps = ewc.workoutExercise.maxReps,
+                        restTime = ewc.workoutExercise.restTime,
+                        notes = ewc.notes,
+                        orderIndex = ewc.workoutExercise.orderIndex,
                         lastSets = lastLogs.map { log ->
                             SyncSet(
                                 setNumber = log.setNumber,

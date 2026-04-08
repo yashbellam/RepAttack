@@ -23,6 +23,9 @@ import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -36,6 +39,7 @@ import com.example.repattack.data.BackupManager
 import com.example.repattack.data.RepAttackDatabase
 import com.example.repattack.data.repository.RepAttackRepository
 import com.example.repattack.navigation.Screen
+import com.example.repattack.ui.screens.ExerciseCatalogScreen
 import com.example.repattack.ui.screens.SettingsScreen
 import com.example.repattack.ui.screens.StatsScreen
 import com.example.repattack.ui.screens.WorkoutsScreen
@@ -65,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
     private val backupManager by lazy {
         val db = RepAttackDatabase.getDatabase(this)
-        BackupManager(RepAttackRepository(db.workoutDao(), db.exerciseDao(), db.exerciseLogDao()))
+        BackupManager(RepAttackRepository(db.workoutDao(), db.exerciseCatalogDao(), db.workoutExerciseDao(), db.exerciseLogDao()))
     }
 
     private val exportLauncher = registerForActivityResult(
@@ -106,6 +110,25 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val currentBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStackEntry?.destination
+                var showExerciseCatalog by remember { mutableStateOf(false) }
+
+                if (showExerciseCatalog) {
+                    val app = application as RepAttackApplication
+                    ExerciseCatalogScreen(
+                        catalogExercises = app.repository.getAllCatalogExercises(),
+                        onBack = { showExerciseCatalog = false },
+                        onUpdate = { exercise ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                app.repository.updateCatalogExercise(exercise)
+                            }
+                        },
+                        onDelete = { exercise ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                app.repository.deleteCatalogExercise(exercise)
+                            }
+                        }
+                    )
+                } else {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -213,10 +236,14 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onImport = {
                                     importLauncher.launch(arrayOf("application/json"))
+                                },
+                                onManageExercises = {
+                                    showExerciseCatalog = true
                                 }
                             )
                         }
                     }
+                }
                 }
             }
         }

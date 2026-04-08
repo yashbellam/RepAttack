@@ -92,7 +92,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.model.ExerciseCatalog
+import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import com.example.repattack.ui.AppViewModelFactory
 import com.example.repattack.ui.viewmodel.WorkoutDetailViewModel
 import sh.calvin.reorderable.ReorderableItem
@@ -107,8 +108,10 @@ fun WorkoutDetailScreen(
 ) {
     val workout by viewModel.workout.collectAsState()
     val exercises by viewModel.exercises.collectAsState()
+    var showExercisePicker by remember { mutableStateOf(false) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
-    var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
+    var pickedCatalogExercise by remember { mutableStateOf<ExerciseCatalog?>(null) }
+    var exerciseToEdit by remember { mutableStateOf<WorkoutExerciseWithCatalog?>(null) }
     var showEditWorkoutSheet by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
@@ -170,7 +173,7 @@ fun WorkoutDetailScreen(
         },
         floatingActionButton = {
             SmallExtendedFloatingActionButton(
-                onClick = { showAddExerciseDialog = true },
+                onClick = { showExercisePicker = true },
                 expanded = !isScrolled,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("Add") },
@@ -204,9 +207,9 @@ fun WorkoutDetailScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(exercises.size, key = { exercises[it].id }) { index ->
+                items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
                     val exercise = exercises[index]
-                    ReorderableItem(reorderableLazyListState, key = exercise.id) { isDragging ->
+                    ReorderableItem(reorderableLazyListState, key = exercise.workoutExercise.id) { isDragging ->
                         LaunchedEffect(isDragging) {
                             if (!isDragging) viewModel.commitReorder()
                         }
@@ -226,10 +229,43 @@ fun WorkoutDetailScreen(
         }
     }
 
+    if (showExercisePicker) {
+        val catalogExercises by viewModel.allCatalogExercises.collectAsState()
+        ExercisePickerSheet(
+            catalogExercises = catalogExercises,
+            onPickExisting = { catalog ->
+                showExercisePicker = false
+                pickedCatalogExercise = catalog
+                showAddExerciseDialog = true
+            },
+            onCreateNew = {
+                showExercisePicker = false
+                pickedCatalogExercise = null
+                showAddExerciseDialog = true
+            },
+            onDismiss = { showExercisePicker = false }
+        )
+    }
+
     if (showAddExerciseDialog) {
+        val prefill = pickedCatalogExercise
         ExerciseEditDialog(
-            exercise = null,
-            onDismiss = { showAddExerciseDialog = false },
+            exercise = if (prefill != null) {
+                // Create a temporary WorkoutExerciseWithCatalog for pre-filling name/url/notes
+                WorkoutExerciseWithCatalog(
+                    workoutExercise = com.example.repattack.data.model.WorkoutExercise(
+                        workoutId = workoutId, exerciseId = prefill.id
+                    ),
+                    name = prefill.name,
+                    url = prefill.url,
+                    notes = prefill.notes
+                )
+            } else null,
+            isNewAdd = true,
+            onDismiss = {
+                showAddExerciseDialog = false
+                pickedCatalogExercise = null
+            },
             onConfirm = { name, targetSets, minReps, maxReps, restTime, notes, url ->
                 viewModel.addExercise(
                     workoutId = workoutId,
@@ -242,25 +278,28 @@ fun WorkoutDetailScreen(
                     url = url
                 )
                 showAddExerciseDialog = false
+                pickedCatalogExercise = null
             }
         )
     }
 
-    exerciseToEdit?.let { exercise ->
+    exerciseToEdit?.let { ewc ->
         ExerciseEditDialog(
-            exercise = exercise,
+            exercise = ewc,
             onDismiss = { exerciseToEdit = null },
             onConfirm = { name, targetSets, minReps, maxReps, restTime, notes, url ->
                 viewModel.updateExercise(
-                    exercise.copy(
-                        name = name,
-                        targetSets = targetSets,
-                        minReps = minReps,
-                        maxReps = maxReps,
-                        restTime = restTime,
-                        notes = notes,
-                        url = url
-                    )
+                    ewc.copy(
+                        workoutExercise = ewc.workoutExercise.copy(
+                            targetSets = targetSets,
+                            minReps = minReps,
+                            maxReps = maxReps,
+                            restTime = restTime
+                        )
+                    ),
+                    name = name,
+                    url = url,
+                    notes = notes
                 )
                 exerciseToEdit = null
             }
@@ -284,7 +323,7 @@ fun WorkoutDetailScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ExerciseCard(
-    exercise: Exercise,
+    exercise: WorkoutExerciseWithCatalog,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
@@ -426,13 +465,13 @@ private fun ExerciseCard(
                         style = MaterialTheme.typography.titleMedium
                     )
                     val details = buildList {
-                        exercise.targetSets?.let { add("$it sets") }
-                        val min = exercise.minReps
-                        val max = exercise.maxReps
+                        exercise.workoutExercise.targetSets?.let { add("$it sets") }
+                        val min = exercise.workoutExercise.minReps
+                        val max = exercise.workoutExercise.maxReps
                         if (min != null && max != null && min != max) add("$min-$max reps")
                         else if (min != null) add("$min reps")
                         else if (max != null) add("$max reps")
-                        if (exercise.restTime.isNotBlank()) add("${exercise.restTime} rest")
+                        if (exercise.workoutExercise.restTime.isNotBlank()) add("${exercise.workoutExercise.restTime} rest")
                     }
                     if (details.isNotEmpty()) {
                         Text(

@@ -4,20 +4,23 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.repattack.data.dao.ExerciseDao
+import com.example.repattack.data.dao.ExerciseCatalogDao
 import com.example.repattack.data.dao.ExerciseLogDao
 import com.example.repattack.data.dao.WorkoutDao
-import com.example.repattack.data.model.Exercise
+import com.example.repattack.data.dao.WorkoutExerciseDao
+import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.data.model.ExerciseLog
 import com.example.repattack.data.model.Workout
+import com.example.repattack.data.model.WorkoutExercise
 
 @Database(
-    entities = [Workout::class, Exercise::class, ExerciseLog::class],
-    version = 1
+    entities = [Workout::class, ExerciseCatalog::class, WorkoutExercise::class, ExerciseLog::class],
+    version = 2
 )
 abstract class RepAttackDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
-    abstract fun exerciseDao(): ExerciseDao
+    abstract fun exerciseCatalogDao(): ExerciseCatalogDao
+    abstract fun workoutExerciseDao(): WorkoutExerciseDao
     abstract fun exerciseLogDao(): ExerciseLogDao
 
     companion object {
@@ -31,6 +34,7 @@ abstract class RepAttackDatabase : RoomDatabase() {
                     RepAttackDatabase::class.java,
                     "repattack_database"
                 )
+                .fallbackToDestructiveMigration()
                 .build().also { INSTANCE = it }
             }
         }
