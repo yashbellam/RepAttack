@@ -39,7 +39,6 @@ import com.example.repattack.data.BackupManager
 import com.example.repattack.data.RepAttackDatabase
 import com.example.repattack.data.repository.RepAttackRepository
 import com.example.repattack.navigation.Screen
-import com.example.repattack.ui.screens.ExerciseCatalogScreen
 import com.example.repattack.ui.screens.SettingsScreen
 import com.example.repattack.ui.screens.StatsScreen
 import com.example.repattack.ui.screens.WorkoutsScreen
@@ -110,25 +109,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val currentBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStackEntry?.destination
-                var showExerciseCatalog by remember { mutableStateOf(false) }
-
-                if (showExerciseCatalog) {
-                    val app = application as RepAttackApplication
-                    ExerciseCatalogScreen(
-                        catalogExercises = app.repository.getAllCatalogExercises(),
-                        onBack = { showExerciseCatalog = false },
-                        onUpdate = { exercise ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                app.repository.updateCatalogExercise(exercise)
-                            }
-                        },
-                        onDelete = { exercise ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                app.repository.deleteCatalogExercise(exercise)
-                            }
-                        }
-                    )
-                } else {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -202,6 +182,11 @@ class MainActivity : ComponentActivity() {
                                     startActivity(
                                         LogSessionActivity.newIntent(this@MainActivity, workoutId)
                                     )
+                                },
+                                onEditWorkout = { workoutId ->
+                                    startActivity(
+                                        WorkoutDetailActivity.newIntent(this@MainActivity, workoutId)
+                                    )
                                 }
                             )
                         }
@@ -238,12 +223,11 @@ class MainActivity : ComponentActivity() {
                                     importLauncher.launch(arrayOf("application/json"))
                                 },
                                 onManageExercises = {
-                                    showExerciseCatalog = true
+                                    startActivity(ExerciseCatalogActivity.newIntent(this@MainActivity))
                                 }
                             )
                         }
                     }
-                }
                 }
             }
         }

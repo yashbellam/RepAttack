@@ -13,9 +13,18 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class RepAttackBackup(
-    val version: Int = 1,
+    val version: Int = 2,
     val exportedAt: Long = System.currentTimeMillis(),
-    val workouts: List<WorkoutBackup>,
+    val exercises: List<CatalogExerciseBackup> = emptyList(),
+    val workouts: List<WorkoutBackup> = emptyList(),
+)
+
+@Serializable
+data class CatalogExerciseBackup(
+    val name: String,
+    val notes: String = "",
+    val url: String = "",
+    val logs: List<ExerciseLogBackup> = emptyList(),
 )
 
 @Serializable
@@ -24,20 +33,17 @@ data class WorkoutBackup(
     val description: String = "",
     val createdAt: Long = 0,
     val orderIndex: Int = 0,
-    val exercises: List<ExerciseBackup> = emptyList(),
+    val exercises: List<WorkoutExerciseBackup> = emptyList(),
 )
 
 @Serializable
-data class ExerciseBackup(
-    val name: String,
+data class WorkoutExerciseBackup(
+    val exerciseName: String = "",
     val targetSets: Int? = null,
     val minReps: Int? = null,
     val maxReps: Int? = null,
     val restTime: String = "",
-    val notes: String = "",
-    val url: String = "",
     val orderIndex: Int = 0,
-    val logs: List<ExerciseLogBackup> = emptyList(),
 )
 
 @Serializable
@@ -46,7 +52,6 @@ data class ExerciseLogBackup(
     val setNumber: Int,
     val weight: Double? = null,
     val reps: Int? = null,
-    val notes: String = "",
 )
 
 private val backupJson = Json {
@@ -58,11 +63,27 @@ private val backupJson = Json {
 class BackupManager(private val repository: RepAttackRepository) {
 
     suspend fun exportToJson(): String {
+        val allCatalog = repository.getAllCatalogExercisesOnce()
+        val allLogs = repository.getAllLogsOnce()
+        val logsByCatalogId = allLogs.groupBy { it.exerciseId }
         val workouts = repository.getAllWorkoutsOnce()
-        val logs = repository.getAllLogsOnce()
-        val logsByCatalogId = logs.groupBy { it.exerciseId }
 
         val backup = RepAttackBackup(
+            exercises = allCatalog.map { catalog ->
+                CatalogExerciseBackup(
+                    name = catalog.name,
+                    notes = catalog.notes,
+                    url = catalog.url,
+                    logs = (logsByCatalogId[catalog.id] ?: emptyList()).map { log ->
+                        ExerciseLogBackup(
+                            date = log.date,
+                            setNumber = log.setNumber,
+                            weight = log.weight,
+                            reps = log.reps,
+                        )
+                    }
+                )
+            },
             workouts = workouts.map { workout ->
                 val exercises = repository.getExercisesForWorkoutOnce(workout.id)
                 WorkoutBackup(
@@ -71,23 +92,13 @@ class BackupManager(private val repository: RepAttackRepository) {
                     createdAt = workout.createdAt,
                     orderIndex = workout.orderIndex,
                     exercises = exercises.map { ewc ->
-                        ExerciseBackup(
-                            name = ewc.name,
+                        WorkoutExerciseBackup(
+                            exerciseName = ewc.name,
                             targetSets = ewc.workoutExercise.targetSets,
                             minReps = ewc.workoutExercise.minReps,
                             maxReps = ewc.workoutExercise.maxReps,
                             restTime = ewc.workoutExercise.restTime,
-                            notes = ewc.notes,
-                            url = ewc.url,
                             orderIndex = ewc.workoutExercise.orderIndex,
-                            logs = (logsByCatalogId[ewc.workoutExercise.exerciseId] ?: emptyList()).map { log ->
-                                ExerciseLogBackup(
-                                    date = log.date,
-                                    setNumber = log.setNumber,
-                                    weight = log.weight,
-                                    reps = log.reps,
-                                )
-                            }
                         )
                     }
                 )
@@ -118,9 +129,35 @@ class BackupManager(private val repository: RepAttackRepository) {
         repository.clearAllWorkouts()
         repository.clearAllCatalogExercises()
 
-        // Track catalog exercises by name to deduplicate
+        // 1. Import all catalog exercises and their logs
         val catalogCache = mutableMapOf<String, Long>()
 
+        backup.exercises.forEach { exerciseBackup ->
+            val catalogId = repository.insertCatalogExercise(
+                ExerciseCatalog(
+                    name = exerciseBackup.name,
+                    notes = exerciseBackup.notes,
+                    url = exerciseBackup.url,
+                )
+            )
+            catalogCache[exerciseBackup.name] = catalogId
+
+            if (exerciseBackup.logs.isNotEmpty()) {
+                repository.insertLogs(
+                    exerciseBackup.logs.map { log ->
+                        ExerciseLog(
+                            exerciseId = catalogId,
+                            date = log.date,
+                            setNumber = log.setNumber,
+                            weight = log.weight,
+                            reps = log.reps,
+                        )
+                    }
+                )
+            }
+        }
+
+        // 2. Import workouts and link exercises by name
         backup.workouts.forEach { workoutBackup ->
             val workoutId = repository.insertWorkout(
                 Workout(
@@ -131,43 +168,19 @@ class BackupManager(private val repository: RepAttackRepository) {
                 )
             )
 
-            workoutBackup.exercises.forEach { exerciseBackup ->
-                // Find or create catalog entry
-                val catalogId = catalogCache.getOrPut(exerciseBackup.name) {
-                    repository.insertCatalogExercise(
-                        ExerciseCatalog(
-                            name = exerciseBackup.name,
-                            url = exerciseBackup.url,
-                            notes = exerciseBackup.notes
-                        )
-                    )
-                }
-
+            workoutBackup.exercises.forEach { we ->
+                val catalogId = catalogCache[we.exerciseName] ?: return@forEach
                 repository.insertWorkoutExercise(
                     WorkoutExercise(
                         workoutId = workoutId,
                         exerciseId = catalogId,
-                        targetSets = exerciseBackup.targetSets,
-                        minReps = exerciseBackup.minReps,
-                        maxReps = exerciseBackup.maxReps,
-                        restTime = exerciseBackup.restTime,
-                        orderIndex = exerciseBackup.orderIndex,
+                        targetSets = we.targetSets,
+                        minReps = we.minReps,
+                        maxReps = we.maxReps,
+                        restTime = we.restTime,
+                        orderIndex = we.orderIndex,
                     )
                 )
-
-                if (exerciseBackup.logs.isNotEmpty()) {
-                    repository.insertLogs(
-                        exerciseBackup.logs.map { logBackup ->
-                            ExerciseLog(
-                                exerciseId = catalogId,
-                                date = logBackup.date,
-                                setNumber = logBackup.setNumber,
-                                weight = logBackup.weight,
-                                reps = logBackup.reps,
-                            )
-                        }
-                    )
-                }
             }
         }
     }

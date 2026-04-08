@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -110,6 +111,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun WorkoutsScreen(
     onWorkoutClick: (Long) -> Unit,
+    onEditWorkout: (Long) -> Unit,
     viewModel: WorkoutListViewModel = viewModel(factory = AppViewModelFactory.Factory)
 ) {
     val workouts by viewModel.workouts.collectAsState()
@@ -151,7 +153,7 @@ fun WorkoutsScreen(
                 },
                 expanded = !isScrolled,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Add") },
+                text = { Text("New") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -191,7 +193,7 @@ fun WorkoutsScreen(
                         WorkoutCard(
                             workout = workout,
                             onClick = { onWorkoutClick(workout.id) },
-                            onEdit = { workoutToEdit = workout },
+                            onEdit = { onEditWorkout(workout.id) },
                             onDuplicate = { viewModel.duplicateWorkout(workout) },
                             onDelete = { viewModel.deleteWorkout(workout) },
                             dragModifier = Modifier
@@ -391,23 +393,23 @@ private fun WorkoutCard(
                 FilledTonalIconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDuplicate()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onEdit()
                     },
                     modifier = Modifier.size(narrowSize),
                     shapes = buttonShapes
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                FilledTonalIconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDuplicate()
+                    },
+                    modifier = Modifier.size(narrowSize),
+                    shapes = buttonShapes
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
                 }
             }
         }
@@ -439,6 +441,7 @@ fun WorkoutEditSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
     ) {
         Column(
             modifier = Modifier

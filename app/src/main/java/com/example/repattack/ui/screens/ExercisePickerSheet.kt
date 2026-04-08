@@ -2,11 +2,14 @@ package com.example.repattack.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +17,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,9 +41,9 @@ import com.example.repattack.data.model.ExerciseCatalog
 
 /**
  * Bottom sheet that shows exercise catalog entries to pick from,
- * plus a "Create new exercise" option at the top.
+ * plus a "New exercise" option at the top.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExercisePickerSheet(
     catalogExercises: List<ExerciseCatalog>,
@@ -53,13 +60,13 @@ fun ExercisePickerSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 32.dp)
         ) {
             Text(
                 text = "Add Exercise",
@@ -69,26 +76,29 @@ fun ExercisePickerSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Create new option
-            Row(
+            Button(
+                onClick = onCreateNew,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onCreateNew() }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(56.dp),
+                shapes = ButtonDefaults.shapes(
+                    shape = MaterialTheme.shapes.large,
+                    pressedShape = MaterialTheme.shapes.small
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Create new exercise",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("New")
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (exercises.isNotEmpty()) {
                 HorizontalDivider()
@@ -106,7 +116,10 @@ fun ExercisePickerSheet(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Catalog list
-                LazyColumn {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
                     items(filtered, key = { it.id }) { exercise ->
                         Row(
                             modifier = Modifier

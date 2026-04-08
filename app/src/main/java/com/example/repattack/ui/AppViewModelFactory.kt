@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.repattack.RepAttackApplication
+import com.example.repattack.ui.viewmodel.ExerciseCatalogViewModel
 import com.example.repattack.ui.viewmodel.LogSessionViewModel
 import com.example.repattack.ui.viewmodel.StatsViewModel
 import com.example.repattack.ui.viewmodel.WorkoutDetailViewModel
@@ -24,6 +25,9 @@ object AppViewModelFactory {
         }
         initializer {
             StatsViewModel(repAttackApplication().repository)
+        }
+        initializer {
+            ExerciseCatalogViewModel(repAttackApplication().repository)
         }
     }
 }

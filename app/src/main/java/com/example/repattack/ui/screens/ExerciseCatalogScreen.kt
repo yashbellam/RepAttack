@@ -1,5 +1,12 @@
 package com.example.repattack.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,61 +15,94 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.ExerciseCatalog
-import kotlinx.coroutines.flow.Flow
+import com.example.repattack.ui.AppViewModelFactory
+import com.example.repattack.ui.viewmodel.ExerciseCatalogViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExerciseCatalogScreen(
-    catalogExercises: Flow<List<ExerciseCatalog>>,
     onBack: () -> Unit,
-    onUpdate: (ExerciseCatalog) -> Unit,
-    onDelete: (ExerciseCatalog) -> Unit
+    viewModel: ExerciseCatalogViewModel = viewModel(factory = AppViewModelFactory.Factory)
 ) {
-    val exercises by catalogExercises.collectAsState(initial = emptyList())
+    val exercises by viewModel.exercises.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val lazyListState = rememberLazyListState()
+    val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
+        lazyListState.firstVisibleItemScrollOffset > 0
+
+    var exerciseToEdit by remember { mutableStateOf<ExerciseCatalog?>(null) }
+    var showAddSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.errorMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
         topBar = {
             MediumFlexibleTopAppBar(
                 title = { Text("Exercise Catalog") },
@@ -87,6 +127,16 @@ fun ExerciseCatalogScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            SmallExtendedFloatingActionButton(
+                onClick = { showAddSheet = true },
+                expanded = !isScrolled,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("New") },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     ) { innerPadding ->
         if (exercises.isEmpty()) {
@@ -95,7 +145,7 @@ fun ExerciseCatalogScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No exercises in catalog yet.\nAdd exercises to your workouts to build the catalog.",
+                    text = "No exercises in catalog yet.\nTap + to add one!",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -103,19 +153,46 @@ fun ExerciseCatalogScreen(
             }
         } else {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(exercises, key = { it.id }) { exercise ->
-                    CatalogExerciseCard(
-                        exercise = exercise,
-                        onUpdate = onUpdate,
-                        onDelete = onDelete
-                    )
+                items(exercises.size, key = { exercises[it].id }) { index ->
+                    val exercise = exercises[index]
+                    Box(modifier = Modifier.animateItem()) {
+                        CatalogExerciseCard(
+                            exercise = exercise,
+                            onEdit = { exerciseToEdit = exercise },
+                            onDuplicate = { viewModel.duplicateExercise(exercise) },
+                            onDelete = { viewModel.deleteExercise(exercise) }
+                        )
+                    }
                 }
             }
         }
+    }
+
+    exerciseToEdit?.let { exercise ->
+        CatalogEditSheet(
+            exercise = exercise,
+            onDismiss = { exerciseToEdit = null },
+            onConfirm = { name, notes, url ->
+                viewModel.updateExercise(exercise.copy(name = name, notes = notes, url = url))
+                exerciseToEdit = null
+            }
+        )
+    }
+
+    if (showAddSheet) {
+        CatalogEditSheet(
+            exercise = null,
+            onDismiss = { showAddSheet = false },
+            onConfirm = { name, notes, url ->
+                viewModel.addExercise(name = name, notes = notes, url = url)
+                showAddSheet = false
+            }
+        )
     }
 }
 
@@ -123,131 +200,240 @@ fun ExerciseCatalogScreen(
 @Composable
 private fun CatalogExerciseCard(
     exercise: ExerciseCatalog,
-    onUpdate: (ExerciseCatalog) -> Unit,
-    onDelete: (ExerciseCatalog) -> Unit
+    onEdit: () -> Unit,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    var showEditDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val deleteButtonWidth = 72.dp
+    val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
+    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
 
-    if (showEditDialog) {
-        var name by remember { mutableStateOf(exercise.name) }
-        var url by remember { mutableStateOf(exercise.url) }
-        var notes by remember { mutableStateOf(exercise.notes) }
-        AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit Exercise") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = url,
-                        onValueChange = { url = it },
-                        label = { Text("Video URL") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("Notes") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onUpdate(exercise.copy(
-                        name = name, url = url, notes = notes
-                    ))
-                    showEditDialog = false
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) { Text("Cancel") }
-            }
-        )
+    fun performDelete() {
+        scope.launch {
+            isDeleting = true
+            val vibrator = context.getSystemService(android.os.Vibrator::class.java)
+            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            offsetX.animateTo(-screenWidthPx, tween(250))
+            onDelete()
+        }
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete exercise?") },
-            text = { Text("Are you sure you want to delete \"${exercise.name}\"? This will remove it from all workouts and delete all logged history for this exercise.") },
+            text = { Text("Are you sure you want to delete \"${exercise.name}\"? This will remove it from all workouts and delete all logged history.") },
             confirmButton = {
                 TextButton(onClick = {
-                    onDelete(exercise)
                     showDeleteDialog = false
+                    performDelete()
                 }) { Text("Delete") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
+                }) { Text("Cancel") }
             }
         )
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+    val swipeFraction = (-offsetX.value / deleteButtonWidthPx).coerceIn(0f, 1f)
+    val revealColor = lerp(
+        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.errorContainer,
+        swipeFraction
+    )
+
+    if (!isDeleting || offsetX.value > -screenWidthPx) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(revealColor, shape = MaterialTheme.shapes.medium)
+            )
+
+            if (swipeFraction > 0.3f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(end = 16.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    FilledIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showDeleteDialog = true
+                        },
+                        shapes = IconButtonDefaults.shapes(),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                    .draggable(
+                        state = rememberDraggableState { delta ->
+                            scope.launch {
+                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                offsetX.snapTo(newOffset)
+                            }
+                        },
+                        orientation = Orientation.Horizontal,
+                        onDragStopped = {
+                            scope.launch {
+                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                offsetX.animateTo(target, tween(250, easing = FastOutSlowInEasing))
+                            }
+                        }
+                    ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (exercise.notes.isNotBlank()) {
+                            Text(
+                                text = exercise.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                        if (exercise.url.isNotBlank()) {
+                            Text(
+                                text = exercise.url,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
+                    val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                    val buttonShapes = IconButtonDefaults.shapes()
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onEdit()
+                        },
+                        modifier = Modifier.size(narrowSize),
+                        shapes = buttonShapes
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onDuplicate()
+                        },
+                        modifier = Modifier.size(narrowSize),
+                        shapes = buttonShapes
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CatalogEditSheet(
+    exercise: ExerciseCatalog?,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, notes: String, url: String) -> Unit
+) {
+    val isEditing = exercise != null
+    var name by remember { mutableStateOf(exercise?.name ?: "") }
+    var notes by remember { mutableStateOf(exercise?.notes ?: "") }
+    var url by remember { mutableStateOf(exercise?.url ?: "") }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val focusRequester = remember { FocusRequester() }
+
+    androidx.compose.runtime.LaunchedEffect(isEditing) {
+        if (!isEditing) {
+            delay(300)
+            focusRequester.requestFocus()
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                if (exercise.notes.isNotBlank()) {
-                    Text(
-                        text = exercise.notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (exercise.url.isNotBlank()) {
-                    Text(
-                        text = exercise.url,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-            }
-            val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
-            FilledTonalIconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showEditDialog = true
-                },
-                modifier = Modifier.size(narrowSize),
-                shapes = IconButtonDefaults.shapes()
+            Text(
+                text = if (isEditing) "Edit Exercise" else "New Exercise",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Exercise name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+            )
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { notes = it },
+                label = { Text("Notes") },
+                maxLines = 3,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = url,
+                onValueChange = { url = it },
+                label = { Text("Link") },
+                placeholder = { Text("e.g. youtube.com/watch?v=...") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            FilledTonalIconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showDeleteDialog = true
-                },
-                modifier = Modifier.size(narrowSize),
-                shapes = IconButtonDefaults.shapes()
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(
+                    onClick = { onConfirm(name, notes, url) },
+                    enabled = name.isNotBlank()
+                ) { Text(if (isEditing) "Save" else "Add") }
             }
         }
     }

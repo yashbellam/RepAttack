@@ -36,22 +36,26 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -78,8 +82,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -112,9 +118,18 @@ fun WorkoutDetailScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var pickedCatalogExercise by remember { mutableStateOf<ExerciseCatalog?>(null) }
     var exerciseToEdit by remember { mutableStateOf<WorkoutExerciseWithCatalog?>(null) }
-    var showEditWorkoutSheet by remember { mutableStateOf(false) }
+
+    var editName by remember { mutableStateOf("") }
+    var editDescription by remember { mutableStateOf("") }
+    LaunchedEffect(workout) {
+        workout?.let {
+            editName = it.name
+            editDescription = it.description
+        }
+    }
 
     val haptic = LocalHapticFeedback.current
+    val focusManager = LocalFocusManager.current
     val lazyListState = rememberLazyListState()
     val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
         lazyListState.firstVisibleItemScrollOffset > 0
@@ -129,10 +144,7 @@ fun WorkoutDetailScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumFlexibleTopAppBar(
-                title = { Text(workout?.name ?: "Exercises") },
-                subtitle = if (workout?.description?.isNotBlank() == true) {
-                    { Text(workout!!.description) }
-                } else null,
+                title = { Text("Edit Workout") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -153,21 +165,6 @@ fun WorkoutDetailScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    val wideSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)
-                    val haptic = LocalHapticFeedback.current
-                    FilledTonalIconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showEditWorkoutSheet = true
-                        },
-                        modifier = Modifier.size(wideSize),
-                        shapes = IconButtonDefaults.shapes()
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit workout")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         },
@@ -183,17 +180,50 @@ fun WorkoutDetailScreen(
         }
     ) { innerPadding ->
         if (exercises.isEmpty()) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "No exercises yet.\nTap + to add one!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                OutlinedTextField(
+                    value = editName,
+                    onValueChange = { editName = it },
+                    label = { Text("Workout name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                        if (!focus.isFocused) workout?.let { w ->
+                            if (editName.isBlank()) editName = w.name
+                            else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+                        }
+                    }
                 )
+                OutlinedTextField(
+                    value = editDescription,
+                    onValueChange = { editDescription = it },
+                    label = { Text("Description (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                        if (!focus.isFocused) workout?.let { w ->
+                            if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No exercises yet.\nTap + to add one!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else {
             val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -203,10 +233,41 @@ fun WorkoutDetailScreen(
                 state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item(key = "workout_fields") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = editName,
+                            onValueChange = { editName = it },
+                            label = { Text("Workout name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                                if (!focus.isFocused) workout?.let { w ->
+                                    if (editName.isBlank()) editName = w.name
+                                    else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+                                }
+                            }
+                        )
+                        OutlinedTextField(
+                            value = editDescription,
+                            onValueChange = { editDescription = it },
+                            label = { Text("Description (optional)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                                if (!focus.isFocused) workout?.let { w ->
+                                    if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
+                                }
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
                 items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
                     val exercise = exercises[index]
                     ReorderableItem(reorderableLazyListState, key = exercise.workoutExercise.id) { isDragging ->
@@ -304,19 +365,6 @@ fun WorkoutDetailScreen(
                 exerciseToEdit = null
             }
         )
-    }
-
-    if (showEditWorkoutSheet) {
-        workout?.let { w ->
-            WorkoutEditSheet(
-                workout = w,
-                onDismiss = { showEditWorkoutSheet = false },
-                onConfirm = { name, description ->
-                    viewModel.updateWorkout(w.copy(name = name, description = description))
-                    showEditWorkoutSheet = false
-                }
-            )
-        }
     }
 }
 
@@ -496,23 +544,23 @@ private fun ExerciseCard(
                 FilledTonalIconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDuplicate()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onEdit()
                     },
                     modifier = Modifier.size(narrowSize),
                     shapes = buttonShapes
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                FilledTonalIconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDuplicate()
+                    },
+                    modifier = Modifier.size(narrowSize),
+                    shapes = buttonShapes
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
                 }
                 Spacer(modifier = Modifier.width(12.dp))
             }

@@ -32,7 +32,7 @@ fun SettingsScreen(
     onManageExercises: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val itemCount = 2
+    val itemCount = 3
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -59,14 +59,6 @@ fun SettingsScreen(
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
         ) {
             item {
-                Text(
-                    text = "Data",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-                )
-            }
-            item {
                 SegmentedListItem(
                     onClick = onExport,
                     shapes = ListItemDefaults.segmentedShapes(index = 0, count = itemCount),
@@ -92,20 +84,10 @@ fun SettingsScreen(
                     Text("Import data")
                 }
             }
-
-            // Library section
-            item {
-                Text(
-                    text = "Library",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                )
-            }
             item {
                 SegmentedListItem(
                     onClick = onManageExercises,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = itemCount),
                     colors = ListItemDefaults.segmentedColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
