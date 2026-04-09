@@ -30,6 +30,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -230,13 +234,22 @@ private fun CatalogExerciseCard(
             title = { Text("Delete exercise?") },
             text = { Text("Are you sure you want to delete \"${exercise.name}\"? This will remove it from all workouts and delete all logged history.") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    performDelete()
-                }) { Text("Delete") }
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        performDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    shapes = ButtonDefaults.shapes()
+                ) {
+                    Text("Delete")
+                }
             },
             dismissButton = {
-                TextButton(onClick = {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = {
                     showDeleteDialog = false
                     scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
                 }) { Text("Cancel") }
@@ -363,7 +376,7 @@ private fun CatalogExerciseCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CatalogEditSheet(
     exercise: ExerciseCatalog?,
@@ -387,7 +400,7 @@ private fun CatalogEditSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
+        dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
@@ -428,9 +441,10 @@ private fun CatalogEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text("Cancel") }
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(
+                Button(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = { onConfirm(name, notes, url) },
                     enabled = name.isNotBlank()
                 ) { Text(if (isEditing) "Save" else "Add") }
@@ -438,3 +452,4 @@ private fun CatalogEditSheet(
         }
     }
 }
+

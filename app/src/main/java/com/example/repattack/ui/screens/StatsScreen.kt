@@ -1,5 +1,6 @@
 package com.example.repattack.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
@@ -52,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,14 +67,12 @@ import com.example.repattack.ui.viewmodel.ChartDataPoint
 import com.example.repattack.ui.viewmodel.SessionSummary
 import com.example.repattack.ui.viewmodel.StatsViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import androidx.compose.runtime.LaunchedEffect
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,7 +88,6 @@ fun StatsScreen(
     val sessions by viewModel.sessions.collectAsState()
     val weightData by viewModel.weightChartData.collectAsState()
     val volumeData by viewModel.volumeChartData.collectAsState()
-    var showVolume by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -133,34 +135,15 @@ fun StatsScreen(
                 }
 
                 if (selectedId != null) {
-                    // Chart type toggle
-                    item {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = !showVolume,
-                                onClick = { showVolume = false },
-                                label = { Text("Max Weight") }
-                            )
-                            FilterChip(
-                                selected = showVolume,
-                                onClick = { showVolume = true },
-                                label = { Text("Volume") }
-                            )
-                        }
-                    }
-
                     // Chart
-                    val chartData = if (showVolume) volumeData else weightData
-                    if (chartData.size >= 2) {
+                    if (weightData.size >= 2 || volumeData.size >= 2) {
                         item {
                             ProgressionChart(
-                                data = chartData,
-                                label = if (showVolume) "Volume (weight × reps)" else "Max Weight"
+                                weightData = weightData,
+                                volumeData = volumeData
                             )
                         }
-                    } else if (chartData.isNotEmpty()) {
+                    } else if (weightData.isNotEmpty() || volumeData.isNotEmpty()) {
                         item {
                             Text(
                                 text = "Log at least 2 sessions to see the chart",
@@ -219,6 +202,7 @@ private fun ExerciseDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedName = exercises.find { it.first == selectedId }?.second ?: ""
+    val focusManager = LocalFocusManager.current
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -236,7 +220,10 @@ private fun ExerciseDropdown(
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = {
+                expanded = false
+                focusManager.clearFocus()
+            }
         ) {
             exercises.forEach { (id, name) ->
                 DropdownMenuItem(
@@ -244,6 +231,7 @@ private fun ExerciseDropdown(
                     onClick = {
                         onSelect(id)
                         expanded = false
+                        focusManager.clearFocus()
                     }
                 )
             }
@@ -253,20 +241,24 @@ private fun ExerciseDropdown(
 
 @Composable
 private fun ProgressionChart(
-    data: List<ChartDataPoint>,
-    label: String
+    weightData: List<ChartDataPoint>,
+    volumeData: List<ChartDataPoint>
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    LaunchedEffect(data) {
-        if (data.isNotEmpty()) {
+    LaunchedEffect(weightData, volumeData) {
+        if (weightData.isNotEmpty() || volumeData.isNotEmpty()) {
             modelProducer.runTransaction {
                 lineSeries {
-                    series(data.map { it.value.toDouble() })
+                    if (weightData.isNotEmpty()) series(weightData.map { it.value.toDouble() })
+                    if (volumeData.isNotEmpty()) series(volumeData.map { it.value.toDouble() })
                 }
             }
         }
     }
+
+    val weightColor = MaterialTheme.colorScheme.primary
+    val volumeColor = MaterialTheme.colorScheme.tertiary
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -276,7 +268,7 @@ private fun ProgressionChart(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = label,
+                text = "Progression",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -284,14 +276,28 @@ private fun ProgressionChart(
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberLineCartesianLayer(),
+                    rememberLineCartesianLayer(),
                     startAxis = VerticalAxis.rememberStart(),
-                    bottomAxis = HorizontalAxis.rememberBottom(),
+                    endAxis = VerticalAxis.rememberEnd(),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = { _, value, _ ->
+                            val idx = value.toInt()
+                            if (idx in weightData.indices) weightData[idx].label else ""
+                        }
+                    ),
                 ),
                 modelProducer = modelProducer,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("● Max Weight (left)", style = MaterialTheme.typography.labelSmall, color = weightColor)
+                Text("● Volume (right)", style = MaterialTheme.typography.labelSmall, color = volumeColor)
+            }
         }
     }
 }
@@ -402,3 +408,4 @@ private fun SessionCard(
         }
     }
 }
+

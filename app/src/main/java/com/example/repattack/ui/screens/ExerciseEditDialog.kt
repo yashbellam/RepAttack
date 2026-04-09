@@ -3,14 +3,20 @@ package com.example.repattack.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -31,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExerciseEditDialog(
     exercise: WorkoutExerciseWithCatalog?,
@@ -75,7 +81,7 @@ fun ExerciseEditDialog(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
+        dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
@@ -171,10 +177,12 @@ fun ExerciseEditDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) {
                     Text("Cancel")
                 }
-                TextButton(
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = {
                         val min = minReps.toIntOrNull()
                         val max = maxReps.toIntOrNull()
@@ -201,3 +209,4 @@ fun ExerciseEditDialog(
         }
     }
 }
+

@@ -36,7 +36,10 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
@@ -418,13 +421,22 @@ private fun ExerciseCard(
             title = { Text("Delete exercise?") },
             text = { Text("Are you sure you want to delete \"${exercise.name}\"?") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    performDelete()
-                }) { Text("Delete") }
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        performDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    shapes = ButtonDefaults.shapes()
+                ) {
+                    Text("Delete")
+                }
             },
             dismissButton = {
-                TextButton(onClick = {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = {
                     showDeleteDialog = false
                     scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
                 }) { Text("Cancel") }
@@ -580,3 +592,4 @@ private fun ExerciseCard(
     }
     }
 }
+

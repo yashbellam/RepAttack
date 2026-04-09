@@ -42,6 +42,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -266,13 +270,22 @@ private fun WorkoutCard(
             title = { Text("Delete workout?") },
             text = { Text("Are you sure you want to delete \"${workout.name}\"? This will also delete all its exercises and logged sets.") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    performDelete()
-                }) { Text("Delete") }
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        performDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    shapes = ButtonDefaults.shapes()
+                ) {
+                    Text("Delete")
+                }
             },
             dismissButton = {
-                TextButton(onClick = {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = {
                     showDeleteDialog = false
                     scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
                 }) { Text("Cancel") }
@@ -418,7 +431,7 @@ private fun WorkoutCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WorkoutEditSheet(
     workout: Workout?,
@@ -441,7 +454,7 @@ fun WorkoutEditSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle(width = 32.dp, height = 4.dp) },
+        dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
@@ -474,10 +487,12 @@ fun WorkoutEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) {
                     Text("Cancel")
                 }
-                TextButton(
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = { onConfirm(name.trim(), description.trim()) },
                     enabled = name.isNotBlank()
                 ) {
@@ -487,3 +502,4 @@ fun WorkoutEditSheet(
         }
     }
 }
+

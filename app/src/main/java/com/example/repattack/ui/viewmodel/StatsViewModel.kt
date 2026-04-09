@@ -89,7 +89,7 @@ class StatsViewModel(
     /** Chart data points — max weight per session over time. */
     val weightChartData: StateFlow<List<ChartDataPoint>> = sessions
         .map { sessionList ->
-            val dateFormat = SimpleDateFormat("M/d", Locale.getDefault())
+            val dateFormat = SimpleDateFormat("d/M", Locale.getDefault())
             sessionList
                 .filter { it.maxWeight != null }
                 .sortedBy { it.date }
@@ -106,7 +106,7 @@ class StatsViewModel(
     /** Chart data points — total volume per session over time. */
     val volumeChartData: StateFlow<List<ChartDataPoint>> = sessions
         .map { sessionList ->
-            val dateFormat = SimpleDateFormat("M/d", Locale.getDefault())
+            val dateFormat = SimpleDateFormat("d/M", Locale.getDefault())
             sessionList
                 .sortedBy { it.date }
                 .map { session ->
