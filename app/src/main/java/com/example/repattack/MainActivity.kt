@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
 
     private val backupManager by lazy {
         val db = RepAttackDatabase.getDatabase(this)
-        BackupManager(RepAttackRepository(db.workoutDao(), db.exerciseCatalogDao(), db.workoutExerciseDao(), db.exerciseLogDao()))
+        BackupManager(RepAttackRepository(db.programDao(), db.workoutDao(), db.exerciseCatalogDao(), db.workoutExerciseDao(), db.exerciseLogDao()))
     }
 
     private val exportLauncher = registerForActivityResult(
@@ -224,6 +224,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onManageExercises = {
                                     startActivity(ExerciseCatalogActivity.newIntent(this@MainActivity))
+                                },
+                                onManagePrograms = {
+                                    startActivity(ProgramActivity.newIntent(this@MainActivity))
                                 }
                             )
                         }

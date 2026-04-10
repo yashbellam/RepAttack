@@ -1,22 +1,46 @@
 package com.example.repattack.ui.viewmodel
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repattack.data.model.Workout
 import com.example.repattack.data.model.WorkoutExercise
 import com.example.repattack.data.repository.RepAttackRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class WorkoutListViewModel(
-    private val repository: RepAttackRepository
+    private val repository: RepAttackRepository,
+    private val prefs: SharedPreferences
 ) : ViewModel() {
 
-    private val dbWorkouts: StateFlow<List<Workout>> = repository.getAllWorkouts()
+    private val _activeProgramId = MutableStateFlow<Long?>(null)
+    val activeProgramId: StateFlow<Long?> = _activeProgramId.asStateFlow()
+
+    init {
+        val savedId = prefs.getLong("active_program_id", -1L)
+        if (savedId != -1L) _activeProgramId.value = savedId
+    }
+
+    /** Re-read active program from prefs (call on resume after switching programs) */
+    fun refreshActiveProgram() {
+        val savedId = prefs.getLong("active_program_id", -1L)
+        if (savedId != -1L) _activeProgramId.value = savedId
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val dbWorkouts: StateFlow<List<Workout>> = _activeProgramId
+        .flatMapLatest { programId ->
+            if (programId != null) repository.getWorkoutsForProgram(programId)
+            else flowOf(emptyList())
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -40,8 +64,9 @@ class WorkoutListViewModel(
 
     fun addWorkout(name: String, description: String = "") {
         viewModelScope.launch {
+            val programId = _activeProgramId.value ?: return@launch
             val currentSize = _workouts.value.size
-            repository.insertWorkout(Workout(name = name, description = description, orderIndex = currentSize))
+            repository.insertWorkout(Workout(programId = programId, name = name, description = description, orderIndex = currentSize))
         }
     }
 
@@ -65,6 +90,7 @@ class WorkoutListViewModel(
 
             val newId = repository.insertWorkout(
                 Workout(
+                    programId = workout.programId,
                     name = "${workout.name} (copy)",
                     description = workout.description,
                     orderIndex = insertIndex

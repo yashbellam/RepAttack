@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -30,9 +31,9 @@ fun SettingsScreen(
     onExport: () -> Unit = {},
     onImport: () -> Unit = {},
     onManageExercises: () -> Unit = {},
+    onManagePrograms: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val itemCount = 3
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -56,45 +57,80 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
         ) {
+            // Data section
             item {
-                SegmentedListItem(
-                    onClick = onExport,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = itemCount),
-                    colors = ListItemDefaults.segmentedColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    ),
-                    supportingContent = { Text("Save all workouts, exercises, and logs as JSON") },
-                    leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
-                ) {
-                    Text("Export data")
-                }
+                Text(
+                    text = "Data",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 0.dp)
+                )
             }
             item {
-                SegmentedListItem(
-                    onClick = onImport,
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = itemCount),
-                    colors = ListItemDefaults.segmentedColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    ),
-                    supportingContent = { Text("Restore from a JSON backup (replaces all data)") },
-                    leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                androidx.compose.foundation.layout.Column(
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
                 ) {
-                    Text("Import data")
+                    SegmentedListItem(
+                        onClick = onExport,
+                        shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                        colors = ListItemDefaults.segmentedColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        supportingContent = { Text("Save all workouts, exercises, and logs as JSON") },
+                        leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
+                    ) {
+                        Text("Export data")
+                    }
+                    SegmentedListItem(
+                        onClick = onImport,
+                        shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                        colors = ListItemDefaults.segmentedColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        supportingContent = { Text("Restore from a JSON backup (replaces all data)") },
+                        leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                    ) {
+                        Text("Import data")
+                    }
                 }
             }
+            // Manage section
             item {
-                SegmentedListItem(
-                    onClick = onManageExercises,
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = itemCount),
-                    colors = ListItemDefaults.segmentedColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    ),
-                    supportingContent = { Text("View, edit, or delete exercises from your catalog") },
-                    leadingContent = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+                Text(
+                    text = "Manage",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 0.dp)
+                )
+            }
+            item {
+                androidx.compose.foundation.layout.Column(
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
                 ) {
-                    Text("Exercise catalog")
+                    SegmentedListItem(
+                        onClick = onManageExercises,
+                        shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                        colors = ListItemDefaults.segmentedColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        supportingContent = { Text("Create, edit, or delete exercises") },
+                        leadingContent = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+                    ) {
+                        Text("Exercises")
+                    }
+                    SegmentedListItem(
+                        onClick = onManagePrograms,
+                        shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                        colors = ListItemDefaults.segmentedColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        supportingContent = { Text("Create, edit, delete, or change active program") },
+                        leadingContent = { Icon(Icons.Default.Folder, contentDescription = null) },
+                    ) {
+                        Text("Programs")
+                    }
                 }
             }
         }

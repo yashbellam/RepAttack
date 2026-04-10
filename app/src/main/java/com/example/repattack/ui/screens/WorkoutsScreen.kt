@@ -121,6 +121,18 @@ fun WorkoutsScreen(
     var workoutToEdit by remember { mutableStateOf<Workout?>(null) }
     var lastClickTime by remember { mutableStateOf(0L) }
 
+    // Refresh active program when returning from ProgramActivity
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshActiveProgram()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val haptic = LocalHapticFeedback.current
     val lazyListState = rememberLazyListState()
     val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||

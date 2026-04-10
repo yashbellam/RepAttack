@@ -13,6 +13,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workouts ORDER BY orderIndex ASC")
     fun getAll(): Flow<List<Workout>>
 
+    @Query("SELECT * FROM workouts WHERE programId = :programId ORDER BY orderIndex ASC")
+    fun getByProgramId(programId: Long): Flow<List<Workout>>
+
     @Query("SELECT * FROM workouts ORDER BY orderIndex ASC")
     suspend fun getAllOnce(): List<Workout>
 

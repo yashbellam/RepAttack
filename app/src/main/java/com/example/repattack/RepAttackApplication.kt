@@ -2,6 +2,7 @@ package com.example.repattack
 
 import android.app.Application
 import com.example.repattack.data.RepAttackDatabase
+import com.example.repattack.data.model.Program
 import com.example.repattack.data.repository.RepAttackRepository
 import com.example.repattack.sync.WorkoutSyncManager
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ class RepAttackApplication : Application() {
     val database: RepAttackDatabase by lazy { RepAttackDatabase.getDatabase(this) }
     val repository: RepAttackRepository by lazy {
         RepAttackRepository(
+            database.programDao(),
             database.workoutDao(),
             database.exerciseCatalogDao(),
             database.workoutExerciseDao(),
@@ -27,6 +29,17 @@ class RepAttackApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Ensure a default program exists and active program is set
+        appScope.launch {
+            val prefs = getSharedPreferences("repattack_prefs", 0)
+            val programs = repository.getAllProgramsOnce()
+            if (programs.isEmpty()) {
+                val id = repository.insertProgram(Program(name = "My Program"))
+                prefs.edit().putLong("active_program_id", id).apply()
+            } else if (prefs.getLong("active_program_id", -1L) == -1L) {
+                prefs.edit().putLong("active_program_id", programs.first().id).apply()
+            }
+        }
         // Auto-sync to watch whenever workouts change
         appScope.launch {
             repository.getAllWorkouts()

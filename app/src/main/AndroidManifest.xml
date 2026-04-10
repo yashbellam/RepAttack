@@ -39,5 +39,9 @@
             android:name=".ExerciseCatalogActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
+        <activity
+            android:name=".ProgramActivity"
+            android:theme="@style/Theme.RepAttack.Compose" />
+
     </application>
 </manifest>

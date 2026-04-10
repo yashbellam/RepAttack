@@ -2,23 +2,37 @@ package com.example.repattack.data.repository
 
 import com.example.repattack.data.dao.ExerciseCatalogDao
 import com.example.repattack.data.dao.ExerciseLogDao
+import com.example.repattack.data.dao.ProgramDao
 import com.example.repattack.data.dao.WorkoutDao
 import com.example.repattack.data.dao.WorkoutExerciseDao
 import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.data.model.ExerciseLog
+import com.example.repattack.data.model.Program
 import com.example.repattack.data.model.Workout
 import com.example.repattack.data.model.WorkoutExercise
 import com.example.repattack.data.model.WorkoutExerciseWithCatalog
 import kotlinx.coroutines.flow.Flow
 
 class RepAttackRepository(
+    private val programDao: ProgramDao,
     private val workoutDao: WorkoutDao,
     private val catalogDao: ExerciseCatalogDao,
     private val workoutExerciseDao: WorkoutExerciseDao,
     private val exerciseLogDao: ExerciseLogDao
 ) {
+    // -- Programs --
+    fun getAllPrograms(): Flow<List<Program>> = programDao.getAll()
+    suspend fun getAllProgramsOnce(): List<Program> = programDao.getAllOnce()
+    suspend fun getProgramById(id: Long): Program? = programDao.getById(id)
+    suspend fun getProgramByName(name: String): Program? = programDao.getByName(name)
+    suspend fun insertProgram(program: Program): Long = programDao.insert(program)
+    suspend fun updateProgram(program: Program) = programDao.update(program)
+    suspend fun deleteProgram(program: Program) = programDao.delete(program)
+    suspend fun clearAllPrograms() = programDao.deleteAll()
+
     // -- Workouts --
     fun getAllWorkouts(): Flow<List<Workout>> = workoutDao.getAll()
+    fun getWorkoutsForProgram(programId: Long): Flow<List<Workout>> = workoutDao.getByProgramId(programId)
     suspend fun getAllWorkoutsOnce(): List<Workout> = workoutDao.getAllOnce()
     suspend fun getWorkoutById(id: Long): Workout? = workoutDao.getById(id)
     suspend fun insertWorkout(workout: Workout): Long = workoutDao.insert(workout)
