@@ -13,7 +13,8 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class RepAttackBackup(
-    val version: Int = 2,
+    val app: String,
+    val version: Int,
     val exportedAt: Long = System.currentTimeMillis(),
     val exercises: List<CatalogExerciseBackup> = emptyList(),
     val workouts: List<WorkoutBackup> = emptyList(),
@@ -69,6 +70,8 @@ class BackupManager(private val repository: RepAttackRepository) {
         val workouts = repository.getAllWorkoutsOnce()
 
         val backup = RepAttackBackup(
+            app = "RepAttack",
+            version = 1,
             exercises = allCatalog.map { catalog ->
                 CatalogExerciseBackup(
                     name = catalog.name,
@@ -121,6 +124,15 @@ class BackupManager(private val repository: RepAttackRepository) {
         } ?: return
 
         val backup = backupJson.decodeFromString<RepAttackBackup>(json)
+        if (backup.app != "RepAttack") {
+            error("Not a RepAttack backup file.")
+        }
+        if (backup.version != 1) {
+            error("Unsupported backup version ${backup.version}.")
+        }
+        if (backup.exercises.isEmpty() && backup.workouts.isEmpty()) {
+            error("Backup file contains no data. Make sure this is a RepAttack backup.")
+        }
         importBackup(backup)
     }
 

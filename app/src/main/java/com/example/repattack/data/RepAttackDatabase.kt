@@ -15,7 +15,7 @@ import com.example.repattack.data.model.WorkoutExercise
 
 @Database(
     entities = [Workout::class, ExerciseCatalog::class, WorkoutExercise::class, ExerciseLog::class],
-    version = 2
+    version = 1
 )
 abstract class RepAttackDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
