@@ -1,8 +1,6 @@
 package com.example.repattack.ui.screens
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -424,6 +422,8 @@ private fun SessionCard(
     val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+    val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var isDeleting by remember { mutableStateOf(false) }
 
     val swipeFraction = (-offsetX.value / deleteButtonWidthPx).coerceIn(0f, 1f)
@@ -479,7 +479,7 @@ private fun SessionCard(
                         onDragStopped = {
                             scope.launch {
                                 val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
-                                offsetX.animateTo(target, tween(250, easing = FastOutSlowInEasing))
+                                offsetX.animateTo(target, swipeSpec)
                             }
                         }
                     ),
@@ -670,7 +670,7 @@ private fun SessionCard(
         var deleteScope by remember { mutableStateOf("exercise") }
         BasicAlertDialog(onDismissRequest = {
             showDeleteDialog = false
-            scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
+            scope.launch { offsetX.animateTo(0f, swipeSpec) }
         }) {
             Surface(
                 shape = AlertDialogDefaults.shape,
@@ -719,7 +719,7 @@ private fun SessionCard(
                         OutlinedButton(
                             onClick = {
                                 showDeleteDialog = false
-                                scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
+                                scope.launch { offsetX.animateTo(0f, swipeSpec) }
                             },
                             shapes = ButtonDefaults.shapes()
                         ) { Text("Cancel") }
@@ -736,11 +736,11 @@ private fun SessionCard(
                                             intArrayOf(0, 200, 0, 200),
                                             -1
                                         ))
-                                        offsetX.animateTo(-screenWidthPx, tween(250))
+                                        offsetX.animateTo(-screenWidthPx, deleteSpec)
                                         onDeleteSession()
                                     } else {
                                         vibrator?.vibrate(android.os.VibrationEffect.createOneShot(300, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-                                        offsetX.animateTo(-screenWidthPx, tween(250))
+                                        offsetX.animateTo(-screenWidthPx, deleteSpec)
                                         onDeleteExercise()
                                     }
                                 }

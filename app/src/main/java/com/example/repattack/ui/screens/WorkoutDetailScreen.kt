@@ -2,10 +2,8 @@ package com.example.repattack.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -366,6 +364,8 @@ private fun ExerciseCard(
     val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+    val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
 
@@ -377,7 +377,7 @@ private fun ExerciseCard(
             val vibrator = context.getSystemService(android.os.Vibrator::class.java)
             vibrator?.vibrate(android.os.VibrationEffect.createOneShot(300, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
             // Swipe off screen
-            offsetX.animateTo(-screenWidthPx, tween(250))
+            offsetX.animateTo(-screenWidthPx, deleteSpec)
             onDelete()
         }
     }
@@ -405,7 +405,7 @@ private fun ExerciseCard(
             dismissButton = {
                 OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = {
                     showDeleteDialog = false
-                    scope.launch { offsetX.animateTo(0f, tween(250, easing = FastOutSlowInEasing)) }
+                    scope.launch { offsetX.animateTo(0f, swipeSpec) }
                 }) { Text("Cancel") }
             }
         )
@@ -467,7 +467,7 @@ private fun ExerciseCard(
                         onDragStopped = {
                             scope.launch {
                                 val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
-                                offsetX.animateTo(target, tween(250, easing = FastOutSlowInEasing))
+                                offsetX.animateTo(target, swipeSpec)
                             }
                         }
                     ),
