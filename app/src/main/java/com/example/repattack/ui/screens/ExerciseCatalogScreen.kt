@@ -91,8 +91,21 @@ fun ExerciseCatalogScreen(
         else exercises.filter { it.name.contains(searchQuery, ignoreCase = true) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
-    val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
-        lazyListState.firstVisibleItemScrollOffset > 0
+    var fabExpanded by remember { mutableStateOf(true) }
+    androidx.compose.runtime.LaunchedEffect(lazyListState) {
+        var prevIndex = lazyListState.firstVisibleItemIndex
+        var prevOffset = lazyListState.firstVisibleItemScrollOffset
+        androidx.compose.runtime.snapshotFlow {
+            Pair(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset)
+        }.collect { pair ->
+            val index = pair.first
+            val offset = pair.second
+            val scrollingDown = index > prevIndex || (index == prevIndex && offset > prevOffset)
+            fabExpanded = (index == 0 && offset == 0) || !scrollingDown
+            prevIndex = index
+            prevOffset = offset
+        }
+    }
 
     var exerciseToEdit by remember { mutableStateOf<ExerciseCatalog?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
@@ -135,7 +148,7 @@ fun ExerciseCatalogScreen(
         floatingActionButton = {
             SmallExtendedFloatingActionButton(
                 onClick = { showAddSheet = true },
-                expanded = !isScrolled,
+                expanded = fabExpanded,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("New") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
