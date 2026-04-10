@@ -77,11 +77,12 @@ class StatsViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Sessions grouped by date, newest first. */
+    /** Sessions grouped by calendar day, newest first. */
     val sessions: StateFlow<List<SessionSummary>> = logsForExercise
         .map { logs ->
-            logs.groupBy { it.date }
-                .map { (date, sets) ->
+            logs.groupBy { it.date / 86_400_000L } // group by day
+                .map { (_, sets) ->
+                    val date = sets.first().date // use first log's timestamp for display
                     val sortedSets = sets.sortedBy { it.setNumber }
                     val maxWeight = sortedSets.mapNotNull { it.weight }.maxOrNull()
                     val totalVolume = sortedSets.sumOf { ((it.weight ?: 0.0).let { w -> if (w == 0.0) 1.0 else w }) * (it.reps ?: 0) }

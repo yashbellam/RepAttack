@@ -40,6 +40,7 @@ interface ExerciseLogDao {
     @Query("DELETE FROM exercise_logs WHERE id = :id")
     suspend fun deleteById(id: Long)
 
-    @Query("UPDATE exercise_logs SET date = :newDate WHERE date = :oldDate")
+    /** Move all logs from one day to another, preserving time-of-day. oldDate/newDate can be any timestamp on the respective days. */
+    @Query("UPDATE exercise_logs SET date = date + ((:newDate / 86400000) - (:oldDate / 86400000)) * 86400000 WHERE date / 86400000 = :oldDate / 86400000")
     suspend fun updateSessionDate(oldDate: Long, newDate: Long)
 }

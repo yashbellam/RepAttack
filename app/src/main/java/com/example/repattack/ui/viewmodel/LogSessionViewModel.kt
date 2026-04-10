@@ -58,13 +58,27 @@ class LogSessionViewModel(
     val logState: StateFlow<List<ExerciseLogState>> = _logState.asStateFlow()
 
     private var initialized = false
-    private var sessionTimestamp: Long = 0L
+    private var dateOverrideDayMillis: Long? = null // midnight of overridden date, or null for today
 
-    fun setSessionDate(millis: Long) {
-        sessionTimestamp = millis
+    /** Returns the timestamp for a log entry: overridden date + current time, or just now. */
+    private fun logTimestamp(): Long {
+        val override = dateOverrideDayMillis ?: return System.currentTimeMillis()
+        // Combine overridden date with current time-of-day
+        val now = java.util.Calendar.getInstance()
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = override
+        cal.set(java.util.Calendar.HOUR_OF_DAY, now.get(java.util.Calendar.HOUR_OF_DAY))
+        cal.set(java.util.Calendar.MINUTE, now.get(java.util.Calendar.MINUTE))
+        cal.set(java.util.Calendar.SECOND, now.get(java.util.Calendar.SECOND))
+        cal.set(java.util.Calendar.MILLISECOND, now.get(java.util.Calendar.MILLISECOND))
+        return cal.timeInMillis
     }
 
-    fun getSessionDate(): Long = sessionTimestamp
+    fun setSessionDate(millis: Long) {
+        dateOverrideDayMillis = millis
+    }
+
+    fun getSessionDate(): Long = dateOverrideDayMillis ?: System.currentTimeMillis()
 
     /** Called when returning to the log screen — refreshes exercises if they changed. */
     fun refresh() {
@@ -114,7 +128,6 @@ class LogSessionViewModel(
     fun loadWorkout(workoutId: Long) {
         if (initialized) return
         _workoutId.value = workoutId
-        sessionTimestamp = System.currentTimeMillis()
         viewModelScope.launch {
             _workout.value = repository.getWorkoutById(workoutId)
         }
@@ -203,7 +216,7 @@ class LogSessionViewModel(
                 val logId = repository.insertLog(
                     ExerciseLog(
                         exerciseId = exerciseState.exerciseId,
-                        date = sessionTimestamp,
+                        date = logTimestamp(),
                         setNumber = setIndex + 1,
                         weight = current.weight,
                         reps = current.reps
@@ -279,7 +292,7 @@ class LogSessionViewModel(
                         val logId = repository.insertLog(
                             ExerciseLog(
                                 exerciseId = exerciseState.exerciseId,
-                                date = sessionTimestamp,
+                                date = logTimestamp(),
                                 setNumber = i + 1,
                                 weight = set.weight,
                                 reps = set.reps
