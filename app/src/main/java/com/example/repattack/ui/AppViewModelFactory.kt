@@ -24,7 +24,8 @@ object AppViewModelFactory {
             LogSessionViewModel(app.repository) { app.triggerWatchSync() }
         }
         initializer {
-            StatsViewModel(repAttackApplication().repository)
+            val app = repAttackApplication()
+            StatsViewModel(app.repository, app.getSharedPreferences("repattack_prefs", 0))
         }
         initializer {
             ExerciseCatalogViewModel(repAttackApplication().repository)

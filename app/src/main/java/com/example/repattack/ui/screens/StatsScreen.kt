@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -36,6 +38,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -68,11 +73,21 @@ import com.example.repattack.ui.viewmodel.SessionSummary
 import com.example.repattack.ui.viewmodel.StatsViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import androidx.compose.runtime.LaunchedEffect
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -134,9 +149,18 @@ fun StatsScreen(
                     )
                 }
 
+                item { Spacer(modifier = Modifier.height(4.dp)) }
+
                 if (selectedId != null) {
                     // Chart
                     if (weightData.size >= 2 || volumeData.size >= 2) {
+                        item {
+                            Text(
+                                text = "Progression",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         item {
                             ProgressionChart(
                                 weightData = weightData,
@@ -239,6 +263,7 @@ private fun ExerciseDropdown(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ProgressionChart(
     weightData: List<ChartDataPoint>,
@@ -249,16 +274,45 @@ private fun ProgressionChart(
     LaunchedEffect(weightData, volumeData) {
         if (weightData.isNotEmpty() || volumeData.isNotEmpty()) {
             modelProducer.runTransaction {
-                lineSeries {
-                    if (weightData.isNotEmpty()) series(weightData.map { it.value.toDouble() })
-                    if (volumeData.isNotEmpty()) series(volumeData.map { it.value.toDouble() })
+                if (volumeData.isNotEmpty()) {
+                    lineSeries { series(volumeData.map { it.value.toDouble() }) }
+                }
+                if (weightData.isNotEmpty()) {
+                    lineSeries { series(weightData.map { it.value.toDouble() }) }
                 }
             }
         }
     }
 
-    val weightColor = MaterialTheme.colorScheme.primary
-    val volumeColor = MaterialTheme.colorScheme.tertiary
+    val weightColor = MaterialTheme.colorScheme.error
+    val volumeColor = MaterialTheme.colorScheme.primary
+
+    val weightLine = LineCartesianLayer.rememberLine(
+        fill = LineCartesianLayer.LineFill.single(Fill(weightColor)),
+        stroke = LineCartesianLayer.LineStroke.Continuous(),
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = rememberShapeComponent(fill = Fill(weightColor), shape = CircleShape),
+                size = 6.dp
+            )
+        ),
+    )
+    val volumeLine = LineCartesianLayer.rememberLine(
+        fill = LineCartesianLayer.LineFill.single(Fill(volumeColor)),
+        stroke = LineCartesianLayer.LineStroke.Continuous(),
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = rememberShapeComponent(fill = Fill(volumeColor), shape = CircleShape),
+                size = 6.dp
+            )
+        ),
+    )
+
+    val marker = rememberDefaultCartesianMarker(
+        label = rememberTextComponent(),
+        indicator = { color -> ShapeComponent(fill = Fill(color), shape = CircleShape) },
+        indicatorSize = 10.dp,
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -267,24 +321,27 @@ private fun ProgressionChart(
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Progression",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             CartesianChartHost(
                 chart = rememberCartesianChart(
-                    rememberLineCartesianLayer(),
-                    rememberLineCartesianLayer(),
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(volumeLine),
+                        verticalAxisPosition = Axis.Position.Vertical.Start,
+                    ),
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(weightLine),
+                        verticalAxisPosition = Axis.Position.Vertical.End,
+                    ),
                     startAxis = VerticalAxis.rememberStart(),
                     endAxis = VerticalAxis.rememberEnd(),
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->
                             val idx = value.toInt()
-                            if (idx in weightData.indices) weightData[idx].label else ""
+                            if (idx in volumeData.indices) volumeData[idx].label
+                            else if (idx in weightData.indices) weightData[idx].label
+                            else ""
                         }
                     ),
+                    marker = marker,
                 ),
                 modelProducer = modelProducer,
                 modifier = Modifier
@@ -293,10 +350,12 @@ private fun ProgressionChart(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text("● Max Weight (left)", style = MaterialTheme.typography.labelSmall, color = weightColor)
-                Text("● Volume (right)", style = MaterialTheme.typography.labelSmall, color = volumeColor)
+                Text("● Volume", style = MaterialTheme.typography.labelSmall, color = volumeColor)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("● Max weight", style = MaterialTheme.typography.labelSmall, color = weightColor)
             }
         }
     }
@@ -363,20 +422,27 @@ private fun SessionCard(
                     )
                 }
             }
-            if (session.maxWeight != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Top set: ${session.topSetDisplay}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            if (session.totalVolume > 0) {
-                Text(
-                    text = "Volume: ${session.totalVolume.toLong()}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (session.totalVolume > 0) {
+                    Text(
+                        text = "Volume: ${session.totalVolume.toLong()}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (session.maxWeight != null) {
+                    Text(
+                        text = "Max weight: ${session.topSetDisplay}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

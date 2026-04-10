@@ -1,5 +1,6 @@
 package com.example.repattack.ui.viewmodel
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repattack.data.model.ExerciseCatalog
@@ -40,7 +41,8 @@ data class ChartDataPoint(
 )
 
 class StatsViewModel(
-    private val repository: RepAttackRepository
+    private val repository: RepAttackRepository,
+    private val prefs: SharedPreferences
 ) : ViewModel() {
 
     val allExercises: StateFlow<List<ExerciseCatalog>> = repository.getAllUsedExercises()
@@ -50,11 +52,18 @@ class StatsViewModel(
     val selectedExerciseId: StateFlow<Long?> = _selectedExerciseId.asStateFlow()
 
     init {
-        // Auto-select the first exercise when the list loads
+        // Restore last selected exercise
+        val savedId = prefs.getLong("last_stats_exercise_id", -1L)
+        if (savedId != -1L) _selectedExerciseId.value = savedId
+
+        // Auto-select first exercise if no saved selection (or saved one no longer exists)
         viewModelScope.launch {
             allExercises.collect { exercises ->
-                if (exercises.isNotEmpty() && _selectedExerciseId.value == null) {
-                    _selectedExerciseId.value = exercises.first().id
+                if (exercises.isNotEmpty()) {
+                    val currentId = _selectedExerciseId.value
+                    if (currentId == null || exercises.none { it.id == currentId }) {
+                        _selectedExerciseId.value = exercises.first().id
+                    }
                 }
             }
         }
@@ -78,7 +87,7 @@ class StatsViewModel(
                     val totalVolume = sortedSets.sumOf { ((it.weight ?: 0.0).let { w -> if (w == 0.0) 1.0 else w }) * (it.reps ?: 0) }
                     val topSet = sortedSets.maxByOrNull { it.weight ?: 0.0 }
                     val topSetDisplay = if (topSet != null && topSet.weight != null) {
-                        "${formatWeight(topSet.weight)} × ${topSet.reps ?: 0}"
+                        "${formatWeight(topSet.weight)} × ${topSet.reps ?: 0} reps"
                     } else ""
                     SessionSummary(date, sortedSets, maxWeight, totalVolume, topSetDisplay)
                 }
@@ -121,6 +130,7 @@ class StatsViewModel(
 
     fun selectExercise(exerciseId: Long) {
         _selectedExerciseId.value = exerciseId
+        prefs.edit().putLong("last_stats_exercise_id", exerciseId).apply()
     }
 
     fun updateSessionDate(oldDate: Long, newDate: Long) {
