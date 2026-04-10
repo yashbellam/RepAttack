@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -87,6 +88,9 @@ fun ExerciseCatalogScreen(
     viewModel: ExerciseCatalogViewModel = viewModel(factory = AppViewModelFactory.Factory)
 ) {
     val exercises by viewModel.exercises.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredExercises = if (searchQuery.isBlank()) exercises
+        else exercises.filter { it.name.contains(searchQuery, ignoreCase = true) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
     val isScrolled = lazyListState.firstVisibleItemIndex > 0 ||
@@ -160,8 +164,18 @@ fun ExerciseCatalogScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(exercises.size, key = { exercises[it].id }) { index ->
-                    val exercise = exercises[index]
+                item {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Search exercises") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+                items(filteredExercises.size, key = { filteredExercises[it].id }) { index ->
+                    val exercise = filteredExercises[index]
                     Box(modifier = Modifier.animateItem()) {
                         CatalogExerciseCard(
                             exercise = exercise,
