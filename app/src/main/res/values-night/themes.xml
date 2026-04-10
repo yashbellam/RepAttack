@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Dark splash screen theme - same as day since we're always dark -->
     <style name="Theme.RepAttack" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#FF1C1B1F</item>
+        <item name="windowSplashScreenBackground">#FF1A1A2E</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="postSplashScreenTheme">@style/Theme.RepAttack.Compose</item>
     </style>
