@@ -196,6 +196,7 @@ fun ProgramScreen(
                             program = program,
                             isActive = program.id == activeProgramId,
                             workoutCount = workoutCountByProgram[program.id] ?: 0,
+                            isLastProgram = programs.size == 1,
                             onSetActive = { viewModel.setActiveProgram(program.id) },
                             onEdit = { programToEdit = program },
                             onDuplicate = { viewModel.duplicateProgram(program) },
@@ -262,6 +263,7 @@ private fun ProgramCard(
     program: Program,
     isActive: Boolean,
     workoutCount: Int,
+    isLastProgram: Boolean,
     onSetActive: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
@@ -361,20 +363,23 @@ private fun ProgramCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-                    .draggable(
-                        state = rememberDraggableState { delta ->
-                            scope.launch {
-                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
-                                offsetX.snapTo(newOffset)
+                    .then(
+                        if (isLastProgram) Modifier
+                        else Modifier.draggable(
+                            state = rememberDraggableState { delta ->
+                                scope.launch {
+                                    val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                    offsetX.snapTo(newOffset)
+                                }
+                            },
+                            orientation = Orientation.Horizontal,
+                            onDragStopped = {
+                                scope.launch {
+                                    val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                    offsetX.animateTo(target, swipeSpec)
+                                }
                             }
-                        },
-                        orientation = Orientation.Horizontal,
-                        onDragStopped = {
-                            scope.launch {
-                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
-                                offsetX.animateTo(target, swipeSpec)
-                            }
-                        }
+                        )
                     ),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer

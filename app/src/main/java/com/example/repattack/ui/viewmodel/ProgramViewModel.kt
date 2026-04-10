@@ -61,6 +61,11 @@ class ProgramViewModel(
 
     fun deleteProgram(program: Program) {
         viewModelScope.launch(Dispatchers.IO) {
+            val all = repository.getAllProgramsOnce()
+            if (all.size <= 1) {
+                _errorMessage.emit("Can't delete the last program")
+                return@launch
+            }
             repository.deleteProgram(program)
             // If we deleted the active program, switch to another
             if (_activeProgramId.value == program.id) {
