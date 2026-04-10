@@ -234,7 +234,7 @@ private fun CatalogExerciseCard(
         scope.launch {
             isDeleting = true
             val vibrator = context.getSystemService(android.os.Vibrator::class.java)
-            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(300, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
             offsetX.animateTo(-screenWidthPx, tween(250))
             onDelete()
         }

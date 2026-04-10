@@ -65,4 +65,10 @@ class RepAttackRepository(
     suspend fun deleteLogById(id: Long) = exerciseLogDao.deleteById(id)
     suspend fun updateSessionDate(oldDate: Long, newDate: Long) =
         exerciseLogDao.updateSessionDate(oldDate, newDate)
+    suspend fun updateExerciseSessionDate(exerciseId: Long, oldDate: Long, newDate: Long) =
+        exerciseLogDao.updateExerciseSessionDate(exerciseId, oldDate, newDate)
+    suspend fun deleteSessionByDate(date: Long) =
+        exerciseLogDao.deleteSessionByDate(date)
+    suspend fun deleteExerciseSessionByDate(exerciseId: Long, date: Long) =
+        exerciseLogDao.deleteExerciseSessionByDate(exerciseId, date)
 }

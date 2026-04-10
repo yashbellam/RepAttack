@@ -256,7 +256,7 @@ private fun WorkoutCard(
         scope.launch {
             isDeleting = true
             val vibrator = context.getSystemService(android.os.Vibrator::class.java)
-            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(300, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
             offsetX.animateTo(-screenWidthPx, tween(250))
             onDelete()
         }
@@ -266,7 +266,7 @@ private fun WorkoutCard(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete workout?") },
-            text = { Text("Are you sure you want to delete \"${workout.name}\"? This will also delete all its exercises and logged sets.") },
+            text = { Text("Are you sure you want to delete \"${workout.name}\"?") },
             confirmButton = {
                 Button(
                     onClick = {

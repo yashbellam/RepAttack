@@ -140,6 +140,24 @@ class StatsViewModel(
         }
     }
 
+    fun updateExerciseSessionDate(exerciseId: Long, oldDate: Long, newDate: Long) {
+        viewModelScope.launch {
+            repository.updateExerciseSessionDate(exerciseId, oldDate, newDate)
+        }
+    }
+
+    fun deleteSession(date: Long) {
+        viewModelScope.launch {
+            repository.deleteSessionByDate(date)
+        }
+    }
+
+    fun deleteExerciseSession(exerciseId: Long, date: Long) {
+        viewModelScope.launch {
+            repository.deleteExerciseSessionByDate(exerciseId, date)
+        }
+    }
+
     private fun formatWeight(weight: Double?): String {
         if (weight == null) return "0"
         return if (weight == weight.toLong().toDouble()) weight.toLong().toString()

@@ -257,6 +257,7 @@ fun WorkoutDetailScreen(
                     }
                     ExerciseCard(
                         exercise = exercise,
+                        workoutName = workout?.name ?: "",
                         onEdit = { exerciseToEdit = exercise },
                         onDuplicate = { viewModel.duplicateExercise(exercise) },
                         onDelete = { viewModel.deleteExercise(exercise) },
@@ -352,6 +353,7 @@ fun WorkoutDetailScreen(
 @Composable
 private fun ExerciseCard(
     exercise: WorkoutExerciseWithCatalog,
+    workoutName: String,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
@@ -373,7 +375,7 @@ private fun ExerciseCard(
             isDeleting = true
             // Long vibration
             val vibrator = context.getSystemService(android.os.Vibrator::class.java)
-            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(300, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
             // Swipe off screen
             offsetX.animateTo(-screenWidthPx, tween(250))
             onDelete()
@@ -383,8 +385,8 @@ private fun ExerciseCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete exercise?") },
-            text = { Text("Are you sure you want to delete \"${exercise.name}\"?") },
+            title = { Text("Remove exercise?") },
+            text = { Text("Are you sure you want to remove \"${exercise.name}\" from \"$workoutName\"?") },
             confirmButton = {
                 Button(
                     onClick = {
