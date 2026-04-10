@@ -156,7 +156,7 @@ fun WorkoutsScreen(
         contentWindowInsets = WindowInsets(0),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Rep Attack") },
+                title = { Text("Rep Attack", fontFamily = com.example.repattack.ui.theme.BrandFontFamily, modifier = Modifier.padding(end = 8.dp)) },
                 subtitle = { Text("Your workouts") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
