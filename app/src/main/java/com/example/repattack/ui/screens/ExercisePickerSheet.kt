@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,12 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.repattack.data.model.ExerciseCatalog
+import kotlinx.coroutines.launch
 
 /**
  * Bottom sheet that shows exercise catalog entries to pick from,
@@ -56,6 +57,7 @@ fun ExercisePickerSheet(
     val exercises = catalogExercises
     var searchQuery by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val filtered = if (searchQuery.isBlank()) exercises
     else exercises.filter { it.name.contains(searchQuery, ignoreCase = true) }
@@ -79,7 +81,7 @@ fun ExercisePickerSheet(
 
             // Create new option
             Button(
-                onClick = onCreateNew,
+                onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onCreateNew() } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -125,7 +127,7 @@ fun ExercisePickerSheet(
                 ) {
                     itemsIndexed(filtered, key = { _, ex -> ex.id }) { index, exercise ->
                         SegmentedListItem(
-                            onClick = { onPickExisting(exercise) },
+                            onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onPickExisting(exercise) } },
                             shapes = ListItemDefaults.segmentedShapes(index = index, count = filtered.size),
                             colors = ListItemDefaults.segmentedColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer

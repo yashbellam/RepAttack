@@ -28,7 +28,8 @@
 
         <activity
             android:name=".LogSessionActivity"
-            android:theme="@style/Theme.RepAttack.Compose" />
+            android:theme="@style/Theme.RepAttack.Compose"
+            android:windowSoftInputMode="adjustNothing" />
 
         <activity
             android:name=".WorkoutDetailActivity"

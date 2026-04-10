@@ -124,10 +124,12 @@ fun WorkoutDetailScreen(
 
     var editName by remember { mutableStateOf("") }
     var editDescription by remember { mutableStateOf("") }
+    var workoutLoaded by remember { mutableStateOf(false) }
     LaunchedEffect(workout) {
         workout?.let {
             editName = it.name
             editDescription = it.description
+            workoutLoaded = true
         }
     }
 
@@ -182,124 +184,87 @@ fun WorkoutDetailScreen(
             )
         }
     ) { innerPadding ->
-        if (exercises.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
-                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = editName,
-                    onValueChange = { editName = it },
-                    label = { Text("Workout name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                        if (!focus.isFocused) workout?.let { w ->
-                            if (editName.isBlank()) editName = w.name
-                            else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+        val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+            viewModel.moveExercise(from.index - 1, to.index - 1)
+        }
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "workout_fields") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Workout name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                            if (!focus.isFocused && workoutLoaded) workout?.let { w ->
+                                if (editName.isBlank()) editName = w.name
+                                else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+                            }
                         }
-                    }
-                )
-                OutlinedTextField(
-                    value = editDescription,
-                    onValueChange = { editDescription = it },
-                    label = { Text("Description (optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                        if (!focus.isFocused) workout?.let { w ->
-                            if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
+                    )
+                    OutlinedTextField(
+                        value = editDescription,
+                        onValueChange = { editDescription = it },
+                        label = { Text("Description (optional)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                            if (!focus.isFocused && workoutLoaded) workout?.let { w ->
+                                if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
+                            }
                         }
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Exercises",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                )
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "No exercises yet.\nTap + to add one!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Exercises",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                     )
                 }
             }
-        } else {
-            val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-                viewModel.moveExercise(from.index - 1, to.index - 1)
-            }
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item(key = "workout_fields") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = editName,
-                            onValueChange = { editName = it },
-                            label = { Text("Workout name") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                                if (!focus.isFocused) workout?.let { w ->
-                                    if (editName.isBlank()) editName = w.name
-                                    else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
-                                }
-                            }
-                        )
-                        OutlinedTextField(
-                            value = editDescription,
-                            onValueChange = { editDescription = it },
-                            label = { Text("Description (optional)") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                                if (!focus.isFocused) workout?.let { w ->
-                                    if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
-                                }
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(8.dp))
+            if (exercises.isEmpty()) {
+                item(key = "empty_state") {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.5f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "Exercises",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                            text = "No exercises yet.\nTap + to add one!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
-                items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
-                    val exercise = exercises[index]
-                    ReorderableItem(reorderableLazyListState, key = exercise.workoutExercise.id) { isDragging ->
-                        LaunchedEffect(isDragging) {
-                            if (!isDragging) viewModel.commitReorder()
-                        }
-                        ExerciseCard(
-                            exercise = exercise,
-                            onEdit = { exerciseToEdit = exercise },
-                            onDuplicate = { viewModel.duplicateExercise(exercise) },
-                            onDelete = { viewModel.deleteExercise(exercise) },
-                            dragModifier = Modifier
-                                .draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate) }
-                                )
-                        )
+            }
+            items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
+                val exercise = exercises[index]
+                ReorderableItem(reorderableLazyListState, key = exercise.workoutExercise.id) { isDragging ->
+                    LaunchedEffect(isDragging) {
+                        if (!isDragging) viewModel.commitReorder()
                     }
+                    ExerciseCard(
+                        exercise = exercise,
+                        onEdit = { exerciseToEdit = exercise },
+                        onDuplicate = { viewModel.duplicateExercise(exercise) },
+                        onDelete = { viewModel.deleteExercise(exercise) },
+                        dragModifier = Modifier
+                            .draggableHandle(
+                                onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate) }
+                            )
+                    )
                 }
             }
         }

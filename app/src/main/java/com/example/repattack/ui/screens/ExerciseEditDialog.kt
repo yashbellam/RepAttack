@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,14 +27,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.repattack.data.model.WorkoutExerciseWithCatalog
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -69,10 +71,11 @@ fun ExerciseEditDialog(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(isEditing, hasCatalogPrefill) {
+    LaunchedEffect(Unit) {
         if (!isEditing) {
-            delay(300)
+            snapshotFlow { sheetState.isVisible }.first { it }
             if (hasCatalogPrefill) setsFocusRequester.requestFocus()
             else focusRequester.requestFocus()
         }
@@ -88,8 +91,7 @@ fun ExerciseEditDialog(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-                .navigationBarsPadding(),
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -177,7 +179,10 @@ fun ExerciseEditDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) {
+                OutlinedButton(
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                ) {
                     Text("Cancel")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -191,15 +196,17 @@ fun ExerciseEditDialog(
                         } else {
                             min to max
                         }
-                        onConfirm(
-                            name.trim(),
-                            targetSets.toIntOrNull(),
-                            finalMin,
-                            finalMax,
-                            restTime.trim(),
-                            notes.trim(),
-                            url.trim()
-                        )
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            onConfirm(
+                                name.trim(),
+                                targetSets.toIntOrNull(),
+                                finalMin,
+                                finalMax,
+                                restTime.trim(),
+                                notes.trim(),
+                                url.trim()
+                            )
+                        }
                     },
                     enabled = name.isNotBlank() && targetSets.toIntOrNull() != null && minReps.toIntOrNull() != null
                 ) {

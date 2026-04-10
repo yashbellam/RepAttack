@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,7 +29,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Button
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -50,7 +48,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -59,6 +56,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +76,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.ExerciseCatalog
 import com.example.repattack.ui.AppViewModelFactory
 import com.example.repattack.ui.viewmodel.ExerciseCatalogViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -389,10 +387,11 @@ private fun CatalogEditSheet(
     var url by remember { mutableStateOf(exercise?.url ?: "") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val focusRequester = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
 
-    androidx.compose.runtime.LaunchedEffect(isEditing) {
+    androidx.compose.runtime.LaunchedEffect(Unit) {
         if (!isEditing) {
-            delay(300)
+            snapshotFlow { sheetState.isVisible }.first { it }
             focusRequester.requestFocus()
         }
     }
@@ -406,8 +405,7 @@ private fun CatalogEditSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-                .navigationBarsPadding(),
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -441,11 +439,14 @@ private fun CatalogEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text("Cancel") }
+                OutlinedButton(
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                ) { Text("Cancel") }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { onConfirm(name, notes, url) },
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onConfirm(name, notes, url) } },
                     enabled = name.isNotBlank()
                 ) { Text(if (isEditing) "Save" else "Add") }
             }

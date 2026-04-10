@@ -25,7 +25,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
@@ -42,7 +41,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Button
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -80,6 +78,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
@@ -107,7 +106,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repattack.data.model.Workout
 import com.example.repattack.ui.AppViewModelFactory
 import com.example.repattack.ui.viewmodel.WorkoutListViewModel
-import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -443,10 +441,11 @@ fun WorkoutEditSheet(
     val isEditing = workout != null
     val focusRequester = remember { FocusRequester() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(isEditing) {
+    LaunchedEffect(Unit) {
         if (!isEditing) {
-            delay(300)
+            snapshotFlow { sheetState.isVisible }.first { it }
             focusRequester.requestFocus()
         }
     }
@@ -460,8 +459,7 @@ fun WorkoutEditSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-                .navigationBarsPadding(),
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -487,13 +485,16 @@ fun WorkoutEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) {
+                OutlinedButton(
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                ) {
                     Text("Cancel")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { onConfirm(name.trim(), description.trim()) },
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onConfirm(name.trim(), description.trim()) } },
                     enabled = name.isNotBlank()
                 ) {
                     Text(if (isEditing) "Save" else "Create")
