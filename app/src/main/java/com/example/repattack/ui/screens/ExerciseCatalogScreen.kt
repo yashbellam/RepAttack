@@ -50,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,9 +98,7 @@ fun ExerciseCatalogScreen(
         var prevOffset = lazyListState.firstVisibleItemScrollOffset
         androidx.compose.runtime.snapshotFlow {
             Pair(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset)
-        }.collect { pair ->
-            val index = pair.first
-            val offset = pair.second
+        }.collect { (index, offset) ->
             val scrollingDown = index > prevIndex || (index == prevIndex && offset > prevOffset)
             fabExpanded = (index == 0 && offset == 0) || !scrollingDown
             prevIndex = index
@@ -169,6 +168,7 @@ fun ExerciseCatalogScreen(
                 )
             }
         } else {
+            var swipedCardId by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -190,6 +190,8 @@ fun ExerciseCatalogScreen(
                     Box(modifier = Modifier.animateItem()) {
                         CatalogExerciseCard(
                             exercise = exercise,
+                            isSwipedOpen = exercise.id == swipedCardId,
+                            onSwipeStarted = { swipedCardId = exercise.id },
                             onEdit = { exerciseToEdit = exercise },
                             onDuplicate = { viewModel.duplicateExercise(exercise) },
                             onDelete = { viewModel.deleteExercise(exercise) }
@@ -227,6 +229,8 @@ fun ExerciseCatalogScreen(
 @Composable
 private fun CatalogExerciseCard(
     exercise: ExerciseCatalog,
+    isSwipedOpen: Boolean,
+    onSwipeStarted: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
     onDelete: () -> Unit
@@ -242,6 +246,12 @@ private fun CatalogExerciseCard(
     val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isSwipedOpen) {
+        if (!isSwipedOpen && offsetX.value != 0f) {
+            offsetX.animateTo(0f, swipeSpec)
+        }
+    }
 
     fun performDelete() {
         scope.launch {
@@ -332,6 +342,7 @@ private fun CatalogExerciseCard(
                             }
                         },
                         orientation = Orientation.Horizontal,
+                        onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
                                 val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
@@ -366,7 +377,7 @@ private fun CatalogExerciseCard(
                             Text(
                                 text = exercise.url,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.primary,
                                 maxLines = 1,
                                 modifier = Modifier.padding(top = 2.dp)
                             )

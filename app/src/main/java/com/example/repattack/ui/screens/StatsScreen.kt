@@ -161,6 +161,7 @@ fun StatsScreen(
                 )
             }
         } else {
+            var swipedCardDate by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
@@ -232,6 +233,8 @@ fun StatsScreen(
                     items(sessions, key = { it.date }) { session ->
                         SessionCard(
                             session = session,
+                            isSwipedOpen = session.date == swipedCardDate,
+                            onSwipeStarted = { swipedCardDate = session.date },
                             onDateChangeExercise = { newDate ->
                                 selectedId?.let { exId ->
                                     viewModel.updateExerciseSessionDate(exId, session.date, newDate)
@@ -405,6 +408,8 @@ private fun ProgressionChart(
 @Composable
 private fun SessionCard(
     session: SessionSummary,
+    isSwipedOpen: Boolean,
+    onSwipeStarted: () -> Unit,
     onDateChangeExercise: (Long) -> Unit,
     onDateChangeSession: (Long) -> Unit,
     onDeleteExercise: () -> Unit,
@@ -427,6 +432,12 @@ private fun SessionCard(
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var isDeleting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isSwipedOpen) {
+        if (!isSwipedOpen && offsetX.value != 0f) {
+            offsetX.animateTo(0f, swipeSpec)
+        }
+    }
 
     val swipeFraction = (-offsetX.value / deleteButtonWidthPx).coerceIn(0f, 1f)
     val revealColor = lerp(
@@ -478,6 +489,7 @@ private fun SessionCard(
                             }
                         },
                         orientation = Orientation.Horizontal,
+                        onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
                                 val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f

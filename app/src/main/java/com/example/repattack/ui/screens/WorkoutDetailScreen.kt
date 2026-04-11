@@ -140,9 +140,7 @@ fun WorkoutDetailScreen(
         var prevOffset = lazyListState.firstVisibleItemScrollOffset
         androidx.compose.runtime.snapshotFlow {
             Pair(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset)
-        }.collect { pair ->
-            val index = pair.first
-            val offset = pair.second
+        }.collect { (index, offset) ->
             val scrollingDown = index > prevIndex || (index == prevIndex && offset > prevOffset)
             fabExpanded = (index == 0 && offset == 0) || !scrollingDown
             prevIndex = index
@@ -195,6 +193,7 @@ fun WorkoutDetailScreen(
             )
         }
     ) { innerPadding ->
+        var swipedCardId by remember { mutableStateOf<Long?>(null) }
         val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
             viewModel.moveExercise(from.index - 1, to.index - 1)
         }
@@ -269,6 +268,8 @@ fun WorkoutDetailScreen(
                     ExerciseCard(
                         exercise = exercise,
                         workoutName = workout?.name ?: "",
+                        isSwipedOpen = exercise.workoutExercise.id == swipedCardId,
+                        onSwipeStarted = { swipedCardId = exercise.workoutExercise.id },
                         onEdit = { exerciseToEdit = exercise },
                         onDuplicate = { viewModel.duplicateExercise(exercise) },
                         onDelete = { viewModel.deleteExercise(exercise) },
@@ -365,6 +366,8 @@ fun WorkoutDetailScreen(
 private fun ExerciseCard(
     exercise: WorkoutExerciseWithCatalog,
     workoutName: String,
+    isSwipedOpen: Boolean,
+    onSwipeStarted: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
@@ -381,6 +384,12 @@ private fun ExerciseCard(
     val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isSwipedOpen) {
+        if (!isSwipedOpen && offsetX.value != 0f) {
+            offsetX.animateTo(0f, swipeSpec)
+        }
+    }
 
     // Swipe away then delete
     fun performDelete() {
@@ -477,6 +486,7 @@ private fun ExerciseCard(
                             }
                         },
                         orientation = Orientation.Horizontal,
+                        onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
                                 val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f

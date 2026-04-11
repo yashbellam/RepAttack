@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -98,9 +99,7 @@ fun ProgramScreen(
         var prevOffset = lazyListState.firstVisibleItemScrollOffset
         androidx.compose.runtime.snapshotFlow {
             Pair(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset)
-        }.collect { pair ->
-            val index = pair.first
-            val offset = pair.second
+        }.collect { (index, offset) ->
             val scrollingDown = index > prevIndex || (index == prevIndex && offset > prevOffset)
             fabExpanded = (index == 0 && offset == 0) || !scrollingDown
             prevIndex = index
@@ -173,6 +172,7 @@ fun ProgramScreen(
                 )
             }
         } else {
+            var swipedCardId by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -197,6 +197,8 @@ fun ProgramScreen(
                             isActive = program.id == activeProgramId,
                             workoutCount = workoutCountByProgram[program.id] ?: 0,
                             isLastProgram = programs.size == 1,
+                            isSwipedOpen = program.id == swipedCardId,
+                            onSwipeStarted = { swipedCardId = program.id },
                             onSetActive = { viewModel.setActiveProgram(program.id) },
                             onEdit = { programToEdit = program },
                             onDuplicate = { viewModel.duplicateProgram(program) },
@@ -264,6 +266,8 @@ private fun ProgramCard(
     isActive: Boolean,
     workoutCount: Int,
     isLastProgram: Boolean,
+    isSwipedOpen: Boolean,
+    onSwipeStarted: () -> Unit,
     onSetActive: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
@@ -280,6 +284,12 @@ private fun ProgramCard(
     val deleteSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLastProgram, isSwipedOpen) {
+        if ((isLastProgram || !isSwipedOpen) && offsetX.value != 0f) {
+            offsetX.animateTo(0f, swipeSpec)
+        }
+    }
 
     fun performDelete() {
         scope.launch {
@@ -373,6 +383,7 @@ private fun ProgramCard(
                                 }
                             },
                             orientation = Orientation.Horizontal,
+                            onDragStarted = { onSwipeStarted() },
                             onDragStopped = {
                                 scope.launch {
                                     val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
@@ -412,15 +423,37 @@ private fun ProgramCard(
                                 else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = if (program.notes.isNotBlank()) "${workoutCount} workouts · ${program.notes}"
-                                else "$workoutCount workouts",
+                            text = "$workoutCount workouts",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (program.notes.isNotBlank()) {
+                            Text(
+                                text = program.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                     }
                     val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
                     val buttonShapes = IconButtonDefaults.shapes()
+                    if (program.url.isNotBlank()) {
+                        val context = LocalContext.current
+                        FilledTonalIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val url = if (program.url.startsWith("http")) program.url
+                                    else "https://${program.url}"
+                                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                            },
+                            modifier = Modifier.size(narrowSize),
+                            shapes = buttonShapes
+                        ) {
+                            Icon(Icons.Filled.Link, contentDescription = "Open link")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     FilledTonalIconButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
