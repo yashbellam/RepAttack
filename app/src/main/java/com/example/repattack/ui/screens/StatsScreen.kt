@@ -98,6 +98,8 @@ import com.example.repattack.ui.viewmodel.ChartDataPoint
 import com.example.repattack.ui.viewmodel.SessionSummary
 import com.example.repattack.ui.viewmodel.StatsViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.Scroll
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
@@ -188,7 +190,7 @@ fun StatsScreen(
                                 fontWeight = FontWeight.Bold,
                             )
                         }
-                        item {
+                        item(key = "chart_$selectedId") {
                             ProgressionChart(
                                 weightData = weightData,
                                 volumeData = volumeData
@@ -313,16 +315,16 @@ private fun ProgressionChart(
     volumeData: List<ChartDataPoint>
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
+    val volumeLabels = remember(volumeData) { volumeData.map { it.label } }
+    val weightLabels = remember(weightData) { weightData.map { it.label } }
 
     LaunchedEffect(weightData, volumeData) {
-        if (weightData.isNotEmpty() || volumeData.isNotEmpty()) {
-            modelProducer.runTransaction {
-                if (volumeData.isNotEmpty()) {
-                    lineSeries { series(volumeData.map { it.value.toDouble() }) }
-                }
-                if (weightData.isNotEmpty()) {
-                    lineSeries { series(weightData.map { it.value.toDouble() }) }
-                }
+        modelProducer.runTransaction {
+            if (volumeData.isNotEmpty()) {
+                lineSeries { series(volumeData.map { it.value.toDouble() }) }
+            }
+            if (weightData.isNotEmpty()) {
+                lineSeries { series(weightData.map { it.value.toDouble() }) }
             }
         }
     }
@@ -365,6 +367,7 @@ private fun ProgressionChart(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             CartesianChartHost(
+                scrollState = rememberVicoScrollState(initialScroll = Scroll.Absolute.End),
                 chart = rememberCartesianChart(
                     rememberLineCartesianLayer(
                         lineProvider = LineCartesianLayer.LineProvider.series(volumeLine),
@@ -379,9 +382,7 @@ private fun ProgressionChart(
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->
                             val idx = value.toInt()
-                            if (idx in volumeData.indices) volumeData[idx].label
-                            else if (idx in weightData.indices) weightData[idx].label
-                            else ""
+                            volumeLabels.getOrElse(idx) { weightLabels.getOrElse(idx) { "–" } }
                         }
                     ),
                     marker = marker,
@@ -575,8 +576,16 @@ private fun SessionCard(
 
     // Date picker
     if (showDatePicker) {
+        val initialUtc = remember(session.date) {
+            val localCal = java.util.Calendar.getInstance()
+            localCal.timeInMillis = session.date
+            val utcCal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+            utcCal.set(localCal.get(java.util.Calendar.YEAR), localCal.get(java.util.Calendar.MONTH), localCal.get(java.util.Calendar.DAY_OF_MONTH), 0, 0, 0)
+            utcCal.set(java.util.Calendar.MILLISECOND, 0)
+            utcCal.timeInMillis
+        }
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = session.date
+            initialSelectedDateMillis = initialUtc
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },

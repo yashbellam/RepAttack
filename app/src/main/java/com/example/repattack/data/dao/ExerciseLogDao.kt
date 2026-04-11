@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExerciseLogDao {
     /** Returns all logs for a catalog exercise, newest first. */
-    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId ORDER BY date DESC")
+    @Query("SELECT * FROM exercise_logs WHERE exerciseId = :exerciseId ORDER BY date DESC, setNumber ASC")
     fun getByexerciseId(exerciseId: Long): Flow<List<ExerciseLog>>
 
-    @Query("SELECT * FROM exercise_logs ORDER BY date DESC")
+    @Query("SELECT * FROM exercise_logs ORDER BY date DESC, setNumber ASC")
     suspend fun getAllOnce(): List<ExerciseLog>
 
     /** Returns the most recent log for each set number of a catalog exercise. */
