@@ -38,6 +38,9 @@ class LogSessionActivity : ComponentActivity() {
                     onBack = { finish() },
                     onEditExercises = { id ->
                         startActivity(WorkoutDetailActivity.newIntent(this, id))
+                    },
+                    onShowExerciseHistory = { exerciseId, exerciseName ->
+                        startActivity(ExerciseHistoryActivity.newIntent(this, exerciseId, exerciseName))
                     }
                 )
             }

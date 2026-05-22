@@ -310,7 +310,7 @@ private fun ExerciseDropdown(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ProgressionChart(
+internal fun ProgressionChart(
     weightData: List<ChartDataPoint>,
     volumeData: List<ChartDataPoint>
 ) {
@@ -407,7 +407,7 @@ private fun ProgressionChart(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SessionCard(
+internal fun SessionCard(
     session: SessionSummary,
     isSwipedOpen: Boolean,
     onSwipeStarted: () -> Unit,

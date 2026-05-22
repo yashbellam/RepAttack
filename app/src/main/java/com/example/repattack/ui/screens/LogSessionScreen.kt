@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
@@ -91,6 +92,7 @@ fun LogSessionScreen(
     workoutId: Long,
     onBack: () -> Unit,
     onEditExercises: (Long) -> Unit,
+    onShowExerciseHistory: (exerciseId: Long, exerciseName: String) -> Unit,
     viewModel: LogSessionViewModel = viewModel(factory = AppViewModelFactory.Factory)
 ) {
     val workout by viewModel.workout.collectAsState()
@@ -221,7 +223,11 @@ fun LogSessionScreen(
                     },
                     onToggleAll = { viewModel.toggleAllSets(exerciseIndex) },
                     onAddSet = { viewModel.addSet(exerciseIndex) },
-                    onRemoveSet = { viewModel.removeSet(exerciseIndex) }
+                    onRemoveSet = { viewModel.removeSet(exerciseIndex) },
+                    onShowHistory = {
+                        val ex = exerciseLogState.exerciseWithCatalog
+                        onShowExerciseHistory(ex.workoutExercise.exerciseId, ex.name)
+                    }
                 )
             }
         }
@@ -278,7 +284,8 @@ private fun ExerciseLogCard(
     onToggleCompleted: (setIndex: Int) -> Unit,
     onToggleAll: () -> Unit,
     onAddSet: () -> Unit,
-    onRemoveSet: () -> Unit
+    onRemoveSet: () -> Unit,
+    onShowHistory: () -> Unit
 ) {
     val exercise = state.exerciseWithCatalog
     val context = LocalContext.current
@@ -301,24 +308,40 @@ private fun ExerciseLogCard(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                if (exercise.url.isNotBlank()) {
-                    val hapticLink = LocalHapticFeedback.current
-                    FilledTonalIconButton(
-                        onClick = {
-                            hapticLink.performHapticFeedback(HapticFeedbackType.LongPress)
-                            val url = if (exercise.url.startsWith("http")) exercise.url
-                                else "https://${exercise.url}"
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                        },
-                        modifier = Modifier.size(36.dp),
-                        shapes = IconButtonDefaults.shapes()
-                    ) {
-                        Icon(
-                            Icons.Default.Link,
-                            contentDescription = "Open link",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                val hapticHistory = LocalHapticFeedback.current
+                FilledTonalIconButton(
+                    onClick = {
+                        hapticHistory.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onShowHistory()
+                    },
+                    modifier = Modifier.size(36.dp),
+                    shapes = IconButtonDefaults.shapes()
+                ) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = "View history",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                val hasLink = exercise.url.isNotBlank()
+                val hapticLink = LocalHapticFeedback.current
+                FilledTonalIconButton(
+                    onClick = {
+                        hapticLink.performHapticFeedback(HapticFeedbackType.LongPress)
+                        val url = if (exercise.url.startsWith("http")) exercise.url
+                            else "https://${exercise.url}"
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    },
+                    enabled = hasLink,
+                    modifier = Modifier.size(36.dp),
+                    shapes = IconButtonDefaults.shapes()
+                ) {
+                    Icon(
+                        Icons.Default.Link,
+                        contentDescription = if (hasLink) "Open link" else "No link",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
             val target = buildList {
@@ -624,7 +647,8 @@ private fun PreviewExerciseLogCard() {
             onToggleCompleted = { },
             onToggleAll = { },
             onAddSet = { },
-            onRemoveSet = { }
+            onRemoveSet = { },
+            onShowHistory = { }
         )
     }
 }

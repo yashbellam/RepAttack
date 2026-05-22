@@ -40,6 +40,10 @@
             android:theme="@style/Theme.RepAttack.Compose" />
 
         <activity
+            android:name=".ExerciseHistoryActivity"
+            android:theme="@style/Theme.RepAttack.Compose" />
+
+        <activity
             android:name=".ProgramActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
