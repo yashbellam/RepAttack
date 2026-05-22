@@ -329,7 +329,7 @@ internal fun ProgressionChart(
         }
     }
 
-    val weightColor = MaterialTheme.colorScheme.error
+    val weightColor = MaterialTheme.colorScheme.tertiary
     val volumeColor = MaterialTheme.colorScheme.primary
 
     val weightLine = LineCartesianLayer.rememberLine(
@@ -564,7 +564,7 @@ internal fun SessionCard(
                             Text(
                                 text = "Max weight: ${session.topSetDisplay}",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.error,
+                                color = MaterialTheme.colorScheme.tertiary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
