@@ -1,6 +1,7 @@
 package com.example.repattack
 
 import android.app.Application
+import android.content.SharedPreferences
 import com.example.repattack.data.RepAttackDatabase
 import com.example.repattack.data.model.Program
 import com.example.repattack.data.repository.RepAttackRepository
@@ -14,6 +15,13 @@ import kotlinx.coroutines.launch
 
 class RepAttackApplication : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Held as a field to prevent GC; SharedPreferences only keeps weak refs.
+    private val activeProgramListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "active_program_id") {
+            triggerWatchSync()
+        }
+    }
 
     val database: RepAttackDatabase by lazy { RepAttackDatabase.getDatabase(this) }
     val repository: RepAttackRepository by lazy {
@@ -54,6 +62,10 @@ class RepAttackApplication : Application() {
         }
         // Also sync on first launch (after seed data, if any)
         appScope.launch { syncManager.syncToWatch() }
+
+        // Re-sync whenever the active program changes
+        getSharedPreferences("repattack_prefs", 0)
+            .registerOnSharedPreferenceChangeListener(activeProgramListener)
     }
 
     /** Call after logging sets so the watch gets updated last-session data. */

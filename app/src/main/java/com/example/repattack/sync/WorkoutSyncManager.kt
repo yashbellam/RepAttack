@@ -16,14 +16,18 @@ import kotlinx.serialization.json.Json
  * whenever the data changes. The watch picks this up via DataListenerService.
  */
 class WorkoutSyncManager(
-    context: Context,
+    private val context: Context,
     private val repository: RepAttackRepository
 ) {
     private val dataClient = Wearable.getDataClient(context)
 
-    /** Reads all workouts + exercises from Room -> converts to DTOs -> pushes via DataClient. */
+    /** Reads workouts for the active program from Room -> converts to DTOs -> pushes via DataClient. */
     suspend fun syncToWatch() {
-        val workouts = repository.getAllWorkoutsOnce()
+        val prefs = context.getSharedPreferences("repattack_prefs", Context.MODE_PRIVATE)
+        val activeProgramId = prefs.getLong("active_program_id", -1L)
+        val allWorkouts = repository.getAllWorkoutsOnce()
+        val workouts = if (activeProgramId == -1L) allWorkouts
+                       else allWorkouts.filter { it.programId == activeProgramId }
         val syncWorkouts = workouts.map { workout ->
             val exercises = repository.getExercisesForWorkoutOnce(workout.id)
             SyncWorkout(
