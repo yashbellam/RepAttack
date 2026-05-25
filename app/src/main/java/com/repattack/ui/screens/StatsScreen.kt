@@ -32,16 +32,16 @@ import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -51,7 +51,7 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -61,6 +61,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,37 +82,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.repattack.ui.AppViewModelFactory
-import com.repattack.ui.viewmodel.ChartDataPoint
-import com.repattack.ui.viewmodel.SessionSummary
-import com.repattack.ui.viewmodel.StatsViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
-import androidx.compose.runtime.LaunchedEffect
+import com.repattack.ui.AppViewModelFactory
+import com.repattack.ui.viewmodel.ChartDataPoint
+import com.repattack.ui.viewmodel.SessionSummary
+import com.repattack.ui.viewmodel.StatsViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.collections.forEach
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -145,7 +144,9 @@ fun StatsScreen(
     ) { innerPadding ->
         if (exercises.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -157,7 +158,9 @@ fun StatsScreen(
         } else {
             var swipedCardDate by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -206,7 +209,9 @@ fun StatsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp)
                             )
                         }
                     }
@@ -391,7 +396,11 @@ internal fun ProgressionChart(
             ) {
                 Text("● Volume", style = MaterialTheme.typography.labelSmall, color = volumeColor)
                 Spacer(modifier = Modifier.width(16.dp))
-                Text("● Max weight", style = MaterialTheme.typography.labelSmall, color = weightColor)
+                Text(
+                    "● Max weight",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = weightColor
+                )
             }
         }
     }
@@ -419,7 +428,8 @@ internal fun SessionCard(
     val context = LocalContext.current
     val deleteButtonWidth = 72.dp
     val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
-    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidthPx =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -477,7 +487,8 @@ internal fun SessionCard(
                     .draggable(
                         state = rememberDraggableState { delta ->
                             scope.launch {
-                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                val newOffset =
+                                    (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
                                 offsetX.snapTo(newOffset)
                             }
                         },
@@ -485,7 +496,8 @@ internal fun SessionCard(
                         onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
-                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                val target =
+                                    if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
                                 offsetX.animateTo(target, swipeSpec)
                             }
                         }
@@ -529,7 +541,10 @@ internal fun SessionCard(
                             Text(
                                 text = buildString {
                                     log.weight?.let {
-                                        append(if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it))
+                                        append(
+                                            if (it == it.toLong().toDouble()) it.toLong()
+                                                .toString() else "%.1f".format(it)
+                                        )
                                         append(" × ")
                                     }
                                     append("${log.reps ?: 0} reps")
@@ -572,8 +587,11 @@ internal fun SessionCard(
             val localCal = Calendar.getInstance()
             localCal.timeInMillis = session.date
             val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            utcCal.set(localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(
-                Calendar.DAY_OF_MONTH), 0, 0, 0)
+            utcCal.set(
+                localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(
+                    Calendar.DAY_OF_MONTH
+                ), 0, 0, 0
+            )
             utcCal.set(Calendar.MILLISECOND, 0)
             utcCal.timeInMillis
         }
@@ -588,8 +606,11 @@ internal fun SessionCard(
                         val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                         utcCal.timeInMillis = millis
                         val localCal = Calendar.getInstance()
-                        localCal.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(
-                            Calendar.DAY_OF_MONTH), 12, 0, 0)
+                        localCal.set(
+                            utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(
+                                Calendar.DAY_OF_MONTH
+                            ), 12, 0, 0
+                        )
                         localCal.set(Calendar.MILLISECOND, 0)
                         pendingNewDate = localCal.timeInMillis
                         showDateScopeDialog = true
@@ -618,10 +639,19 @@ internal fun SessionCard(
                     Text(
                         "Move which sets?",
                         style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(
+                            start = 24.dp,
+                            top = 24.dp,
+                            end = 24.dp,
+                            bottom = 8.dp
+                        )
                     )
                     Text(
-                        "Move just \"$exerciseName\" or all exercises logged on ${dateFormat.format(Date(session.date))}?",
+                        "Move just \"$exerciseName\" or all exercises logged on ${
+                            dateFormat.format(
+                                Date(session.date)
+                            )
+                        }?",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
@@ -633,7 +663,9 @@ internal fun SessionCard(
                             colors = ListItemDefaults.colors(containerColor = AlertDialogDefaults.containerColor),
                             headlineContent = { Text("This exercise") },
                             leadingContent = {
-                                RadioButton(selected = moveScope == "exercise", onClick = { moveScope = "exercise" })
+                                RadioButton(
+                                    selected = moveScope == "exercise",
+                                    onClick = { moveScope = "exercise" })
                             }
                         )
                         ListItem(
@@ -641,7 +673,9 @@ internal fun SessionCard(
                             colors = ListItemDefaults.colors(containerColor = AlertDialogDefaults.containerColor),
                             headlineContent = { Text("Whole session") },
                             leadingContent = {
-                                RadioButton(selected = moveScope == "session", onClick = { moveScope = "session" })
+                                RadioButton(
+                                    selected = moveScope == "session",
+                                    onClick = { moveScope = "session" })
                             }
                         )
                     }
@@ -665,13 +699,19 @@ internal fun SessionCard(
                                 if (moveScope == "session") {
                                     vibrator?.vibrate(
                                         VibrationEffect.createWaveform(
-                                        longArrayOf(0, 50, 40, 150),
-                                        intArrayOf(0, 200, 0, 200),
-                                        -1
-                                    ))
+                                            longArrayOf(0, 50, 40, 150),
+                                            intArrayOf(0, 200, 0, 200),
+                                            -1
+                                        )
+                                    )
                                     onDateChangeSession(pendingNewDate)
                                 } else {
-                                    vibrator?.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+                                    vibrator?.vibrate(
+                                        VibrationEffect.createOneShot(
+                                            150,
+                                            VibrationEffect.DEFAULT_AMPLITUDE
+                                        )
+                                    )
                                     onDateChangeExercise(pendingNewDate)
                                 }
                             },
@@ -699,10 +739,19 @@ internal fun SessionCard(
                     Text(
                         "Delete which sets?",
                         style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(
+                            start = 24.dp,
+                            top = 24.dp,
+                            end = 24.dp,
+                            bottom = 8.dp
+                        )
                     )
                     Text(
-                        "Delete just \"$exerciseName\" or all exercises logged on ${dateFormat.format(Date(session.date))}?",
+                        "Delete just \"$exerciseName\" or all exercises logged on ${
+                            dateFormat.format(
+                                Date(session.date)
+                            )
+                        }?",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
@@ -714,7 +763,9 @@ internal fun SessionCard(
                             colors = ListItemDefaults.colors(containerColor = AlertDialogDefaults.containerColor),
                             headlineContent = { Text("This exercise") },
                             leadingContent = {
-                                RadioButton(selected = deleteScope == "exercise", onClick = { deleteScope = "exercise" })
+                                RadioButton(
+                                    selected = deleteScope == "exercise",
+                                    onClick = { deleteScope = "exercise" })
                             }
                         )
                         ListItem(
@@ -722,7 +773,9 @@ internal fun SessionCard(
                             colors = ListItemDefaults.colors(containerColor = AlertDialogDefaults.containerColor),
                             headlineContent = { Text("Whole session") },
                             leadingContent = {
-                                RadioButton(selected = deleteScope == "session", onClick = { deleteScope = "session" })
+                                RadioButton(
+                                    selected = deleteScope == "session",
+                                    onClick = { deleteScope = "session" })
                             }
                         )
                     }
@@ -751,14 +804,20 @@ internal fun SessionCard(
                                     if (deleteScope == "session") {
                                         vibrator?.vibrate(
                                             VibrationEffect.createWaveform(
-                                            longArrayOf(0, 50, 40, 300),
-                                            intArrayOf(0, 200, 0, 200),
-                                            -1
-                                        ))
+                                                longArrayOf(0, 50, 40, 300),
+                                                intArrayOf(0, 200, 0, 200),
+                                                -1
+                                            )
+                                        )
                                         offsetX.animateTo(-screenWidthPx, deleteSpec)
                                         onDeleteSession()
                                     } else {
-                                        vibrator?.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+                                        vibrator?.vibrate(
+                                            VibrationEffect.createOneShot(
+                                                300,
+                                                VibrationEffect.DEFAULT_AMPLITUDE
+                                            )
+                                        )
                                         offsetX.animateTo(-screenWidthPx, deleteSpec)
                                         onDeleteExercise()
                                     }

@@ -17,7 +17,8 @@ interface ExerciseLogDao {
     suspend fun getAllOnce(): List<ExerciseLog>
 
     /** Returns the most recent log for each set number of a catalog exercise. */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM exercise_logs e1
         WHERE exerciseId = :exerciseId
         AND date = (
@@ -25,7 +26,8 @@ interface ExerciseLogDao {
             WHERE e2.exerciseId = :exerciseId AND e2.setNumber = e1.setNumber
         )
         ORDER BY setNumber ASC
-    """)
+    """
+    )
     suspend fun getLastSessionForExercise(exerciseId: Long): List<ExerciseLog>
 
     @Insert

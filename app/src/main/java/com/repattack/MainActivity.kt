@@ -3,9 +3,9 @@ package com.repattack
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -15,23 +15,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.NavDestination
 import com.repattack.data.BackupManager
 import com.repattack.data.RepAttackDatabase
 import com.repattack.data.repository.RepAttackRepository
@@ -64,7 +64,7 @@ private fun tabIndex(dest: NavDestination?): Int {
 class MainActivity : ComponentActivity() {
 
     private val backupManager by lazy {
-        val db = RepAttackDatabase.Companion.getDatabase(this)
+        val db = RepAttackDatabase.getDatabase(this)
         BackupManager(
             RepAttackRepository(
                 db.programDao(),
@@ -83,9 +83,21 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 backupManager.exportToUri(this@MainActivity, uri)
-                runOnUiThread { Toast.makeText(this@MainActivity, "Data exported", Toast.LENGTH_SHORT).show() }
+                runOnUiThread {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Data exported",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             } catch (e: Exception) {
-                runOnUiThread { Toast.makeText(this@MainActivity, "Export failed: ${e.message}", Toast.LENGTH_LONG).show() }
+                runOnUiThread {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Export failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
@@ -97,9 +109,21 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 backupManager.importFromUri(this@MainActivity, uri)
-                runOnUiThread { Toast.makeText(this@MainActivity, "Data imported", Toast.LENGTH_SHORT).show() }
+                runOnUiThread {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Data imported",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             } catch (e: Exception) {
-                runOnUiThread { Toast.makeText(this@MainActivity, "Import failed: ${e.message}", Toast.LENGTH_LONG).show() }
+                runOnUiThread {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Import failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }

@@ -1,13 +1,13 @@
 package com.repattack.sync
 
 import android.content.Context
+import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.Wearable
 import com.repattack.data.repository.RepAttackRepository
 import com.repattack.shared.SyncExercise
 import com.repattack.shared.SyncPaths
 import com.repattack.shared.SyncSet
 import com.repattack.shared.SyncWorkout
-import com.google.android.gms.wearable.PutDataMapRequest
-import com.google.android.gms.wearable.Wearable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -27,7 +27,7 @@ class WorkoutSyncManager(
         val activeProgramId = prefs.getLong("active_program_id", -1L)
         val allWorkouts = repository.getAllWorkoutsOnce()
         val workouts = if (activeProgramId == -1L) allWorkouts
-                       else allWorkouts.filter { it.programId == activeProgramId }
+        else allWorkouts.filter { it.programId == activeProgramId }
         val syncWorkouts = workouts.map { workout ->
             val exercises = repository.getExercisesForWorkoutOnce(workout.id)
             SyncWorkout(
@@ -35,7 +35,8 @@ class WorkoutSyncManager(
                 name = workout.name,
                 description = workout.description,
                 exercises = exercises.map { ewc ->
-                    val lastLogs = repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
+                    val lastLogs =
+                        repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
                     SyncExercise(
                         id = ewc.workoutExercise.exerciseId,
                         name = ewc.name,

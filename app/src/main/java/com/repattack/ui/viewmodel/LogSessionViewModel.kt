@@ -59,7 +59,8 @@ class LogSessionViewModel(
     val logState: StateFlow<List<ExerciseLogState>> = _logState.asStateFlow()
 
     private var initialized = false
-    private var dateOverrideDayMillis: Long? = null // midnight of overridden date, or null for today
+    private var dateOverrideDayMillis: Long? =
+        null // midnight of overridden date, or null for today
 
     /** Returns the timestamp for a log entry: overridden date + current time, or just now. */
     private fun logTimestamp(): Long {
@@ -86,10 +87,10 @@ class LogSessionViewModel(
         val workoutId = _workoutId.value ?: return
         viewModelScope.launch {
             _workout.value = repository.getWorkoutById(workoutId)
-            
+
             val dbExercises = repository.getExercisesForWorkoutOnce(workoutId)
             val currentMap = _logState.value.associateBy { it.workoutExercise.id }
-            
+
             val newLogState = dbExercises.map { ewc ->
                 val existing = currentMap[ewc.workoutExercise.id]
                 if (existing != null) {
@@ -103,7 +104,8 @@ class LogSessionViewModel(
                     existing.copy(exerciseWithCatalog = ewc, sets = updatedSets)
                 } else {
                     val numSets = ewc.workoutExercise.targetSets ?: 3
-                    val lastLogs = repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
+                    val lastLogs =
+                        repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
                     if (lastLogs.isNotEmpty()) {
                         val logsBySetNumber = lastLogs.associateBy { it.setNumber }
                         val fallbackWeight = lastLogs.mapNotNull { it.weight }.firstOrNull() ?: 0.0
@@ -111,15 +113,20 @@ class LogSessionViewModel(
                             exerciseWithCatalog = ewc,
                             sets = List(numSets) { index ->
                                 val log = logsBySetNumber[index + 1]
-                                SetEntry(weight = log?.weight ?: fallbackWeight, reps = log?.reps ?: 0)
+                                SetEntry(
+                                    weight = log?.weight ?: fallbackWeight,
+                                    reps = log?.reps ?: 0
+                                )
                             }
                         )
                     } else {
-                        ExerciseLogState(exerciseWithCatalog = ewc, sets = List(numSets) { SetEntry() })
+                        ExerciseLogState(
+                            exerciseWithCatalog = ewc,
+                            sets = List(numSets) { SetEntry() })
                     }
                 }
             }
-            
+
             if (newLogState != _logState.value) {
                 _logState.value = newLogState
             }
@@ -137,19 +144,26 @@ class LogSessionViewModel(
                 if (exerciseList.isNotEmpty() && _logState.value.isEmpty()) {
                     _logState.value = exerciseList.map { ewc ->
                         val numSets = ewc.workoutExercise.targetSets ?: 3
-                        val lastLogs = repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
+                        val lastLogs =
+                            repository.getLastSessionForExercise(ewc.workoutExercise.exerciseId)
                         if (lastLogs.isNotEmpty()) {
                             val logsBySetNumber = lastLogs.associateBy { it.setNumber }
-                            val fallbackWeight = lastLogs.mapNotNull { it.weight }.firstOrNull() ?: 0.0
+                            val fallbackWeight =
+                                lastLogs.mapNotNull { it.weight }.firstOrNull() ?: 0.0
                             ExerciseLogState(
                                 exerciseWithCatalog = ewc,
                                 sets = List(numSets) { index ->
                                     val log = logsBySetNumber[index + 1]
-                                    SetEntry(weight = log?.weight ?: fallbackWeight, reps = log?.reps ?: 0)
+                                    SetEntry(
+                                        weight = log?.weight ?: fallbackWeight,
+                                        reps = log?.reps ?: 0
+                                    )
                                 }
                             )
                         } else {
-                            ExerciseLogState(exerciseWithCatalog = ewc, sets = List(numSets) { SetEntry() })
+                            ExerciseLogState(
+                                exerciseWithCatalog = ewc,
+                                sets = List(numSets) { SetEntry() })
                         }
                     }
                     initialized = true
@@ -181,7 +195,8 @@ class LogSessionViewModel(
             sets[setIndex] = sets[setIndex].copy(weight = weight.coerceAtLeast(0.0))
             if (setIndex == 0) {
                 for (i in 1 until sets.size) {
-                    if (!sets[i].completed) sets[i] = sets[i].copy(weight = weight.coerceAtLeast(0.0))
+                    if (!sets[i].completed) sets[i] =
+                        sets[i].copy(weight = weight.coerceAtLeast(0.0))
                 }
             }
             list[exerciseIndex] = exerciseState.copy(sets = sets)
@@ -281,7 +296,12 @@ class LogSessionViewModel(
                     if (exerciseIndex in list.indices) {
                         val current = list[exerciseIndex]
                         list[exerciseIndex] = current.copy(
-                            sets = current.sets.map { it.copy(completed = false, savedLogId = null) }
+                            sets = current.sets.map {
+                                it.copy(
+                                    completed = false,
+                                    savedLogId = null
+                                )
+                            }
                         )
                     }
                 }
@@ -353,7 +373,9 @@ class LogSessionViewModel(
             }
             repository.updateWorkoutExercise(ewc.workoutExercise)
             _logState.value = _logState.value.map { state ->
-                if (state.workoutExercise.id == ewc.workoutExercise.id) state.copy(exerciseWithCatalog = ewc)
+                if (state.workoutExercise.id == ewc.workoutExercise.id) state.copy(
+                    exerciseWithCatalog = ewc
+                )
                 else state
             }
         }
@@ -362,7 +384,8 @@ class LogSessionViewModel(
     fun deleteExercise(ewc: WorkoutExerciseWithCatalog) {
         viewModelScope.launch {
             repository.deleteWorkoutExercise(ewc.workoutExercise)
-            _logState.value = _logState.value.filter { it.workoutExercise.id != ewc.workoutExercise.id }
+            _logState.value =
+                _logState.value.filter { it.workoutExercise.id != ewc.workoutExercise.id }
         }
     }
 

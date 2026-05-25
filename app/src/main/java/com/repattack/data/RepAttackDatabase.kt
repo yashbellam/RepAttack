@@ -37,8 +37,8 @@ abstract class RepAttackDatabase : RoomDatabase() {
                     RepAttackDatabase::class.java,
                     "repattack_database"
                 )
-                .fallbackToDestructiveMigration()
-                .build().also { INSTANCE = it }
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
             }
         }
     }

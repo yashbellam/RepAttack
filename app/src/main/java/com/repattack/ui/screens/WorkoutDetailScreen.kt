@@ -31,25 +31,25 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -61,31 +61,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repattack.data.model.ExerciseCatalog
+import com.repattack.data.model.WorkoutExercise
 import com.repattack.data.model.WorkoutExerciseWithCatalog
 import com.repattack.ui.AppViewModelFactory
 import com.repattack.ui.viewmodel.WorkoutDetailViewModel
-import com.repattack.data.model.WorkoutExercise
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -194,23 +194,31 @@ fun WorkoutDetailScreen(
                         onValueChange = { editName = it },
                         label = { Text("Workout name") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                            if (!focus.isFocused && workoutLoaded) workout?.let { w ->
-                                if (editName.isBlank()) editName = w.name
-                                else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focus ->
+                                if (!focus.isFocused && workoutLoaded) workout?.let { w ->
+                                    if (editName.isBlank()) editName = w.name
+                                    else if (editName != w.name) viewModel.updateWorkout(w.copy(name = editName))
+                                }
                             }
-                        }
                     )
                     OutlinedTextField(
                         value = editDescription,
                         onValueChange = { editDescription = it },
                         label = { Text("Description (optional)") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                            if (!focus.isFocused && workoutLoaded) workout?.let { w ->
-                                if (editDescription != w.description) viewModel.updateWorkout(w.copy(description = editDescription))
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focus ->
+                                if (!focus.isFocused && workoutLoaded) workout?.let { w ->
+                                    if (editDescription != w.description) viewModel.updateWorkout(
+                                        w.copy(
+                                            description = editDescription
+                                        )
+                                    )
+                                }
                             }
-                        }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
@@ -242,7 +250,10 @@ fun WorkoutDetailScreen(
             }
             items(exercises.size, key = { exercises[it].workoutExercise.id }) { index ->
                 val exercise = exercises[index]
-                ReorderableItem(reorderableLazyListState, key = exercise.workoutExercise.id) { isDragging ->
+                ReorderableItem(
+                    reorderableLazyListState,
+                    key = exercise.workoutExercise.id
+                ) { isDragging ->
                     LaunchedEffect(isDragging) {
                         if (!isDragging) viewModel.commitReorder()
                     }
@@ -358,7 +369,8 @@ private fun ExerciseCard(
     val context = LocalContext.current
     val deleteButtonWidth = 72.dp
     val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
-    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidthPx =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -462,7 +474,8 @@ private fun ExerciseCard(
                     .draggable(
                         state = rememberDraggableState { delta ->
                             scope.launch {
-                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                val newOffset =
+                                    (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
                                 offsetX.snapTo(newOffset)
                             }
                         },
@@ -470,7 +483,8 @@ private fun ExerciseCard(
                         onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
-                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                val target =
+                                    if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
                                 offsetX.animateTo(target, swipeSpec)
                             }
                         }
@@ -479,88 +493,89 @@ private fun ExerciseCard(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = dragModifier
-                        .fillMaxHeight()
-                        .width(32.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "⠿",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                Column(
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp, top = 16.dp, bottom = 16.dp)
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = exercise.name,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    val details = buildList {
-                        exercise.workoutExercise.targetSets?.let { add("$it sets") }
-                        val min = exercise.workoutExercise.minReps
-                        val max = exercise.workoutExercise.maxReps
-                        if (min != null && max != null && min != max) add("$min-$max reps")
-                        else if (min != null) add("$min reps")
-                        else if (max != null) add("$max reps")
-                        if (exercise.workoutExercise.restTime.isNotBlank()) add("${exercise.workoutExercise.restTime} rest")
-                    }
-                    if (details.isNotEmpty()) {
+                    Box(
+                        modifier = dragModifier
+                            .fillMaxHeight()
+                            .width(32.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = details.joinToString(" · "),
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "⠿",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
-                    if (exercise.notes.isNotBlank()) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp, top = 16.dp, bottom = 16.dp)
+                    ) {
                         Text(
-                            text = exercise.notes,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 2.dp)
+                            text = exercise.name,
+                            style = MaterialTheme.typography.titleMedium
                         )
+                        val details = buildList {
+                            exercise.workoutExercise.targetSets?.let { add("$it sets") }
+                            val min = exercise.workoutExercise.minReps
+                            val max = exercise.workoutExercise.maxReps
+                            if (min != null && max != null && min != max) add("$min-$max reps")
+                            else if (min != null) add("$min reps")
+                            else if (max != null) add("$max reps")
+                            if (exercise.workoutExercise.restTime.isNotBlank()) add("${exercise.workoutExercise.restTime} rest")
+                        }
+                        if (details.isNotEmpty()) {
+                            Text(
+                                text = details.joinToString(" · "),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        if (exercise.notes.isNotBlank()) {
+                            Text(
+                                text = exercise.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                     }
+                    val narrowSize =
+                        IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                    val buttonShapes = IconButtonDefaults.shapes()
+                    val haptic = LocalHapticFeedback.current
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onEdit()
+                        },
+                        modifier = Modifier.size(narrowSize),
+                        shapes = buttonShapes
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onDuplicate()
+                        },
+                        modifier = Modifier.size(narrowSize),
+                        shapes = buttonShapes
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
-                val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
-                val buttonShapes = IconButtonDefaults.shapes()
-                val haptic = LocalHapticFeedback.current
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onEdit()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDuplicate()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
-                }
-                Spacer(modifier = Modifier.width(12.dp))
             }
         }
-    }
     }
 }
 

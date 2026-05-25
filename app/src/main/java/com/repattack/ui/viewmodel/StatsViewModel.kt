@@ -85,7 +85,9 @@ class StatsViewModel(
                     val date = sets.first().date // use first log's timestamp for display
                     val sortedSets = sets.sortedBy { it.setNumber }
                     val maxWeight = sortedSets.mapNotNull { it.weight }.maxOrNull()
-                    val totalVolume = sortedSets.sumOf { ((it.weight ?: 0.0).let { w -> if (w == 0.0) 1.0 else w }) * (it.reps ?: 0) }
+                    val totalVolume = sortedSets.sumOf {
+                        ((it.weight ?: 0.0).let { w -> if (w == 0.0) 1.0 else w }) * (it.reps ?: 0)
+                    }
                     val topSet = sortedSets.maxByOrNull { it.weight ?: 0.0 }
                     val topSetDisplay = if (topSet != null && topSet.weight != null) {
                         "${formatWeight(topSet.weight)} × ${topSet.reps ?: 0} reps"

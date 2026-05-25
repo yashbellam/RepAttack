@@ -64,6 +64,7 @@ fun WorkoutDetailScreen(workout: SyncWorkout) {
                             exercise.minReps != null && exercise.maxReps != null &&
                                     exercise.minReps != exercise.maxReps ->
                                 append("${exercise.minReps}-${exercise.maxReps}")
+
                             exercise.minReps != null -> append("${exercise.minReps}")
                             exercise.maxReps != null -> append("${exercise.maxReps}")
                         }
@@ -77,7 +78,8 @@ fun WorkoutDetailScreen(workout: SyncWorkout) {
                         val weights = exercise.lastSets.mapNotNull { it.weight }.distinct()
                         if (weights.size == 1 && weights[0] != null) {
                             val w = weights[0]
-                            val weightStr = if (w % 1.0 == 0.0) w.toInt().toString() else w.toString()
+                            val weightStr =
+                                if (w % 1.0 == 0.0) w.toInt().toString() else w.toString()
                             val repsStr = exercise.lastSets.joinToString("/") { set ->
                                 set.reps?.toString() ?: "–"
                             }
@@ -86,7 +88,10 @@ fun WorkoutDetailScreen(workout: SyncWorkout) {
                             exercise.lastSets.joinToString(" / ") { set ->
                                 buildString {
                                     set.weight?.let { w ->
-                                        append(if (w % 1.0 == 0.0) w.toInt().toString() else w.toString())
+                                        append(
+                                            if (w % 1.0 == 0.0) w.toInt()
+                                                .toString() else w.toString()
+                                        )
                                         append("×")
                                     }
                                     set.reps?.let { append(it) }

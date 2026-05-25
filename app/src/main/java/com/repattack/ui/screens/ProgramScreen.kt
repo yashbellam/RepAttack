@@ -117,7 +117,7 @@ fun ProgramScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val filteredPrograms = if (searchQuery.isBlank()) programs
-        else programs.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    else programs.filter { it.name.contains(searchQuery, ignoreCase = true) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -167,7 +167,9 @@ fun ProgramScreen(
     ) { innerPadding ->
         if (programs.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -181,8 +183,15 @@ fun ProgramScreen(
             var swipedCardId by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
                 state = lazyListState,
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp,
+                    bottom = 96.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
@@ -243,7 +252,13 @@ fun ProgramScreen(
             title = "Edit Program",
             onDismiss = { programToEdit = null },
             onConfirm = { newName, newNotes, newUrl ->
-                viewModel.updateProgram(program.copy(name = newName, notes = newNotes, url = newUrl))
+                viewModel.updateProgram(
+                    program.copy(
+                        name = newName,
+                        notes = newNotes,
+                        url = newUrl
+                    )
+                )
                 programToEdit = null
             }
         )
@@ -283,7 +298,8 @@ private fun ProgramCard(
     val context = LocalContext.current
     val deleteButtonWidth = 72.dp
     val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
-    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidthPx =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -384,7 +400,8 @@ private fun ProgramCard(
                         else Modifier.draggable(
                             state = rememberDraggableState { delta ->
                                 scope.launch {
-                                    val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                    val newOffset =
+                                        (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
                                     offsetX.snapTo(newOffset)
                                 }
                             },
@@ -392,7 +409,8 @@ private fun ProgramCard(
                             onDragStarted = { onSwipeStarted() },
                             onDragStopped = {
                                 scope.launch {
-                                    val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                    val target =
+                                        if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
                                     offsetX.animateTo(target, swipeSpec)
                                 }
                             }
@@ -426,7 +444,7 @@ private fun ProgramCard(
                             text = program.name,
                             style = MaterialTheme.typography.titleMedium,
                             color = if (isActive) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "$workoutCount workouts",
@@ -442,7 +460,8 @@ private fun ProgramCard(
                             )
                         }
                     }
-                    val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                    val narrowSize =
+                        IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
                     val buttonShapes = IconButtonDefaults.shapes()
                     if (program.url.isNotBlank()) {
                         val context = LocalContext.current
@@ -450,7 +469,7 @@ private fun ProgramCard(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val url = if (program.url.startsWith("http")) program.url
-                                    else "https://${program.url}"
+                                else "https://${program.url}"
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                             },
                             modifier = Modifier.size(narrowSize),
@@ -557,7 +576,13 @@ private fun ProgramEditSheet(
             Button(
                 onClick = {
                     if (editName.isNotBlank()) {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion { onConfirm(editName.trim(), editNotes.trim(), editUrl.trim()) }
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            onConfirm(
+                                editName.trim(),
+                                editNotes.trim(),
+                                editUrl.trim()
+                            )
+                        }
                     }
                 },
                 enabled = editName.isNotBlank(),

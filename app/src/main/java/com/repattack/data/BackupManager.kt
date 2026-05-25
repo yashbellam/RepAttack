@@ -11,7 +11,6 @@ import com.repattack.data.repository.RepAttackRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.collections.map
 
 @Serializable
 data class RepAttackBackup(
@@ -85,7 +84,13 @@ class BackupManager(private val repository: RepAttackRepository) {
         val backup = RepAttackBackup(
             app = "RepAttack",
             version = 1,
-            programs = programs.map { ProgramBackup(name = it.name, notes = it.notes, url = it.url) },
+            programs = programs.map {
+                ProgramBackup(
+                    name = it.name,
+                    notes = it.notes,
+                    url = it.url
+                )
+            },
             exercises = allCatalog.map { catalog ->
                 CatalogExerciseBackup(
                     name = catalog.name,

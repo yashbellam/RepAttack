@@ -92,7 +92,12 @@ fun SettingsScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
                         ),
                         supportingContent = { Text("Restore from a JSON backup (replaces all data)") },
-                        leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                        leadingContent = {
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = null
+                            )
+                        },
                     ) {
                         Text("Import data")
                     }
@@ -118,7 +123,12 @@ fun SettingsScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
                         ),
                         supportingContent = { Text("Create, edit, or delete exercises") },
-                        leadingContent = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+                        leadingContent = {
+                            Icon(
+                                Icons.Default.FitnessCenter,
+                                contentDescription = null
+                            )
+                        },
                     ) {
                         Text("Exercises")
                     }

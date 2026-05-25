@@ -39,7 +39,6 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -47,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -81,13 +81,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.repattack.data.model.WorkoutExercise
+import com.repattack.data.model.WorkoutExerciseWithCatalog
 import com.repattack.ui.AppViewModelFactory
+import com.repattack.ui.theme.RepAttackTheme
 import com.repattack.ui.viewmodel.ExerciseLogState
 import com.repattack.ui.viewmodel.LogSessionViewModel
 import com.repattack.ui.viewmodel.SetEntry
-import com.repattack.data.model.WorkoutExercise
-import com.repattack.data.model.WorkoutExerciseWithCatalog
-import com.repattack.ui.theme.RepAttackTheme
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -154,7 +154,8 @@ fun LogSessionScreen(
                     }
                 },
                 actions = {
-                    val wideSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)
+                    val wideSize =
+                        IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)
                     val haptic = LocalHapticFeedback.current
                     FilledTonalIconButton(
                         onClick = {
@@ -185,7 +186,9 @@ fun LogSessionScreen(
         val focusManager = LocalFocusManager.current
         if (logState.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -197,45 +200,45 @@ fun LogSessionScreen(
             }
         } else {
             LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = { focusManager.clearFocus() })
-                }
-                .padding(innerPadding)
-                .consumeWindowInsets(innerPadding)
-                .imePadding(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            itemsIndexed(logState) { exerciseIndex, exerciseLogState ->
-                ExerciseLogCard(
-                    state = exerciseLogState,
-                    onWeightDelta = { setIndex, delta ->
-                        viewModel.updateWeight(exerciseIndex, setIndex, delta)
-                    },
-                    onSetWeight = { setIndex, weight ->
-                        viewModel.setWeight(exerciseIndex, setIndex, weight)
-                    },
-                    onRepsDelta = { setIndex, delta ->
-                        viewModel.updateReps(exerciseIndex, setIndex, delta)
-                    },
-                    onSetReps = { setIndex, reps ->
-                        viewModel.setReps(exerciseIndex, setIndex, reps)
-                    },
-                    onToggleCompleted = { setIndex ->
-                        viewModel.toggleSetCompleted(exerciseIndex, setIndex)
-                    },
-                    onToggleAll = { viewModel.toggleAllSets(exerciseIndex) },
-                    onAddSet = { viewModel.addSet(exerciseIndex) },
-                    onRemoveSet = { viewModel.removeSet(exerciseIndex) },
-                    onShowHistory = {
-                        val ex = exerciseLogState.exerciseWithCatalog
-                        onShowExerciseHistory(ex.workoutExercise.exerciseId, ex.name)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { focusManager.clearFocus() })
                     }
-                )
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(logState) { exerciseIndex, exerciseLogState ->
+                    ExerciseLogCard(
+                        state = exerciseLogState,
+                        onWeightDelta = { setIndex, delta ->
+                            viewModel.updateWeight(exerciseIndex, setIndex, delta)
+                        },
+                        onSetWeight = { setIndex, weight ->
+                            viewModel.setWeight(exerciseIndex, setIndex, weight)
+                        },
+                        onRepsDelta = { setIndex, delta ->
+                            viewModel.updateReps(exerciseIndex, setIndex, delta)
+                        },
+                        onSetReps = { setIndex, reps ->
+                            viewModel.setReps(exerciseIndex, setIndex, reps)
+                        },
+                        onToggleCompleted = { setIndex ->
+                            viewModel.toggleSetCompleted(exerciseIndex, setIndex)
+                        },
+                        onToggleAll = { viewModel.toggleAllSets(exerciseIndex) },
+                        onAddSet = { viewModel.addSet(exerciseIndex) },
+                        onRemoveSet = { viewModel.removeSet(exerciseIndex) },
+                        onShowHistory = {
+                            val ex = exerciseLogState.exerciseWithCatalog
+                            onShowExerciseHistory(ex.workoutExercise.exerciseId, ex.name)
+                        }
+                    )
+                }
             }
-        }
         }
     }
 
@@ -245,8 +248,11 @@ fun LogSessionScreen(
             val localCal = Calendar.getInstance()
             localCal.timeInMillis = sessionDateMillis
             val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            utcCal.set(localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(
-                Calendar.DAY_OF_MONTH), 0, 0, 0)
+            utcCal.set(
+                localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(
+                    Calendar.DAY_OF_MONTH
+                ), 0, 0, 0
+            )
             utcCal.set(Calendar.MILLISECOND, 0)
             utcCal.timeInMillis
         }
@@ -263,8 +269,11 @@ fun LogSessionScreen(
                         val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                         utcCal.timeInMillis = millis
                         val localCal = Calendar.getInstance()
-                        localCal.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(
-                            Calendar.DAY_OF_MONTH))
+                        localCal.set(
+                            utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(
+                                Calendar.DAY_OF_MONTH
+                            )
+                        )
                         sessionDateMillis = localCal.timeInMillis
                         viewModel.setSessionDate(localCal.timeInMillis)
                     }
@@ -337,7 +346,7 @@ private fun ExerciseLogCard(
                     onClick = {
                         hapticLink.performHapticFeedback(HapticFeedbackType.LongPress)
                         val url = if (exercise.url.startsWith("http")) exercise.url
-                            else "https://${exercise.url}"
+                        else "https://${exercise.url}"
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                     },
                     enabled = hasLink,
@@ -391,16 +400,32 @@ private fun ExerciseLogCard(
                 previousAllCompleted = allCompleted
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("SET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
+                Text(
+                    "SET",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(28.dp),
+                    textAlign = TextAlign.Center
+                )
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "WEIGHT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text("REPS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "REPS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 // Check-all toggle button — M3E shape morph
                 OutlinedIconToggleButton(
@@ -452,7 +477,10 @@ private fun ExerciseLogCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onRemoveSet) { Text("Remove set") }
+                TextButton(
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = onRemoveSet
+                ) { Text("Remove set") }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onAddSet) { Text("Add set") }
             }
@@ -505,9 +533,17 @@ private fun SetRow(
         }
 
         // Weight: [–] editable [+]
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f)
+        ) {
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(-2.5) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(
+                    -2.5
+                )
+                },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -515,7 +551,11 @@ private fun SetRow(
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                Icon(Icons.Default.Remove, contentDescription = "Decrease weight", modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.Remove,
+                    contentDescription = "Decrease weight",
+                    modifier = Modifier.size(16.dp)
+                )
             }
             var weightText by remember(set.weight) {
                 mutableStateOf(formatWeight(set.weight))
@@ -523,7 +563,9 @@ private fun SetRow(
             BasicTextField(
                 value = weightText,
                 onValueChange = { text ->
-                    if (text.isEmpty() || text.replace(",", ".").toDoubleOrNull() != null || text == "." || text == ",") {
+                    if (text.isEmpty() || text.replace(",", ".")
+                            .toDoubleOrNull() != null || text == "." || text == ","
+                    ) {
                         weightText = text
                         val parsed = text.replace(",", ".").toDoubleOrNull()
                         if (parsed != null) onSetWeight(parsed)
@@ -533,12 +575,18 @@ private fun SetRow(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(52.dp).onFocusChanged {
-                    if (!it.isFocused) weightText = formatWeight(set.weight)
-                }
+                modifier = Modifier
+                    .width(52.dp)
+                    .onFocusChanged {
+                        if (!it.isFocused) weightText = formatWeight(set.weight)
+                    }
             )
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(2.5) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onWeightDelta(
+                    2.5
+                )
+                },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -546,14 +594,26 @@ private fun SetRow(
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Increase weight", modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Increase weight",
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
 
         // Reps: [–] editable [+]
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f)
+        ) {
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(-1) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(
+                    -1
+                )
+                },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -561,7 +621,11 @@ private fun SetRow(
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                Icon(Icons.Default.Remove, contentDescription = "Decrease reps", modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.Remove,
+                    contentDescription = "Decrease reps",
+                    modifier = Modifier.size(16.dp)
+                )
             }
             var repsText by remember(set.reps) {
                 mutableStateOf("${set.reps}")
@@ -579,12 +643,18 @@ private fun SetRow(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(36.dp).onFocusChanged {
-                    if (!it.isFocused) repsText = "${set.reps}"
-                }
+                modifier = Modifier
+                    .width(36.dp)
+                    .onFocusChanged {
+                        if (!it.isFocused) repsText = "${set.reps}"
+                    }
             )
             FilledTonalIconButton(
-                onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(1) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick); onRepsDelta(
+                    1
+                )
+                },
                 modifier = Modifier.size(32.dp),
                 shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -592,7 +662,11 @@ private fun SetRow(
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Increase reps", modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Increase reps",
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
 

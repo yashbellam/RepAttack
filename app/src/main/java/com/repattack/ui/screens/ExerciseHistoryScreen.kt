@@ -45,7 +45,7 @@ fun ExerciseHistoryScreen(
     exerciseName: String,
     onBack: () -> Unit
 ) {
-    val factory = remember(exerciseId) { ExerciseHistoryViewModel.Companion.factory(exerciseId) }
+    val factory = remember(exerciseId) { ExerciseHistoryViewModel.factory(exerciseId) }
     val viewModel: ExerciseHistoryViewModel = viewModel(
         factory = factory,
         key = "exercise_history_$exerciseId"
@@ -89,7 +89,9 @@ fun ExerciseHistoryScreen(
     ) { innerPadding ->
         if (sessions.isEmpty() && weightData.isEmpty() && volumeData.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -102,7 +104,9 @@ fun ExerciseHistoryScreen(
         } else {
             var swipedCardDate by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {

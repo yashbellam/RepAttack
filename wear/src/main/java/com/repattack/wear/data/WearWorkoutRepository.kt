@@ -1,13 +1,13 @@
 package com.repattack.wear.data
 
 import android.content.Context
-import com.repattack.shared.SyncPaths
-import com.repattack.shared.SyncWorkout
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
+import com.repattack.shared.SyncPaths
+import com.repattack.shared.SyncWorkout
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +43,7 @@ class WearWorkoutRepository(context: Context) : DataClient.OnDataChangedListener
     /** Load initial data from the DataLayer on startup. */
     suspend fun loadInitial() {
         try {
-            val dataItems = dataClient.getDataItems().await()
+            val dataItems = dataClient.dataItems.await()
             for (item in dataItems) {
                 if (item.uri.path == SyncPaths.WORKOUTS) {
                     val dataMap = DataMapItem.fromDataItem(item).dataMap

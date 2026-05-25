@@ -17,13 +17,14 @@ class RepAttackApplication : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Held as a field to prevent GC; SharedPreferences only keeps weak refs.
-    private val activeProgramListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == "active_program_id") {
-            triggerWatchSync()
+    private val activeProgramListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "active_program_id") {
+                triggerWatchSync()
+            }
         }
-    }
 
-    val database: RepAttackDatabase by lazy { RepAttackDatabase.Companion.getDatabase(this) }
+    val database: RepAttackDatabase by lazy { RepAttackDatabase.getDatabase(this) }
     val repository: RepAttackRepository by lazy {
         RepAttackRepository(
             database.programDao(),

@@ -32,7 +32,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +44,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -60,10 +60,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -74,8 +76,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repattack.data.model.ExerciseCatalog
 import com.repattack.ui.AppViewModelFactory
@@ -93,7 +93,7 @@ fun ExerciseCatalogScreen(
     val exercises by viewModel.exercises.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     val filteredExercises = if (searchQuery.isBlank()) exercises
-        else exercises.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    else exercises.filter { it.name.contains(searchQuery, ignoreCase = true) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
     var fabExpanded by remember { mutableStateOf(true) }
@@ -161,7 +161,9 @@ fun ExerciseCatalogScreen(
     ) { innerPadding ->
         if (exercises.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -175,8 +177,15 @@ fun ExerciseCatalogScreen(
             var swipedCardId by remember { mutableStateOf<Long?>(null) }
             LazyColumn(
                 state = lazyListState,
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp,
+                    bottom = 96.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
@@ -243,7 +252,8 @@ private fun CatalogExerciseCard(
     val context = LocalContext.current
     val deleteButtonWidth = 72.dp
     val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
-    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidthPx =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -341,7 +351,8 @@ private fun CatalogExerciseCard(
                     .draggable(
                         state = rememberDraggableState { delta ->
                             scope.launch {
-                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                val newOffset =
+                                    (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
                                 offsetX.snapTo(newOffset)
                             }
                         },
@@ -349,7 +360,8 @@ private fun CatalogExerciseCard(
                         onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
-                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                val target =
+                                    if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
                                 offsetX.animateTo(target, swipeSpec)
                             }
                         }
@@ -387,7 +399,8 @@ private fun CatalogExerciseCard(
                             )
                         }
                     }
-                    val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                    val narrowSize =
+                        IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
                     val buttonShapes = IconButtonDefaults.shapes()
                     FilledTonalIconButton(
                         onClick = {
@@ -460,7 +473,9 @@ private fun CatalogEditSheet(
                 onValueChange = { name = it },
                 label = { Text("Exercise name") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
             )
             OutlinedTextField(
                 value = notes,
@@ -483,12 +498,17 @@ private fun CatalogEditSheet(
             ) {
                 OutlinedButton(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                    onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                    }
                 ) { Text("Cancel") }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onConfirm(name, notes, url) } },
+                    onClick = {
+                        scope.launch { sheetState.hide() }
+                            .invokeOnCompletion { onConfirm(name, notes, url) }
+                    },
                     enabled = name.isNotBlank()
                 ) { Text(if (isEditing) "Save" else "Add") }
             }

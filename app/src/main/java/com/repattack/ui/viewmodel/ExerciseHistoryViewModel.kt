@@ -3,8 +3,8 @@ package com.repattack.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.repattack.data.model.ExerciseLog
 import com.repattack.data.repository.RepAttackRepository
 import com.repattack.ui.repAttackApplication

@@ -21,9 +21,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -31,29 +31,30 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,22 +63,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -85,10 +82,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repattack.data.model.Workout
 import com.repattack.ui.AppViewModelFactory
-import com.repattack.ui.viewmodel.WorkoutListViewModel
 import com.repattack.ui.theme.BrandFontFamily
+import com.repattack.ui.viewmodel.WorkoutListViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -137,7 +137,13 @@ fun WorkoutsScreen(
         contentWindowInsets = WindowInsets(0),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Rep Attack", fontFamily = BrandFontFamily, modifier = Modifier.padding(end = 8.dp)) },
+                title = {
+                    Text(
+                        "Rep Attack",
+                        fontFamily = BrandFontFamily,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                },
                 subtitle = { Text("Your workouts") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -180,15 +186,21 @@ fun WorkoutsScreen(
             }
         } else {
             var swipedCardId by remember { mutableStateOf<Long?>(null) }
-            val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-                viewModel.moveWorkout(from.index, to.index)
-            }
+            val reorderableLazyListState =
+                rememberReorderableLazyListState(lazyListState) { from, to ->
+                    viewModel.moveWorkout(from.index, to.index)
+                }
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp,
+                    bottom = 96.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(workouts.size, key = { workouts[it].id }) { index ->
@@ -207,7 +219,11 @@ fun WorkoutsScreen(
                             onSwipeStarted = { swipedCardId = workout.id },
                             dragModifier = Modifier
                                 .draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate) }
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(
+                                            HapticFeedbackType.GestureThresholdActivate
+                                        )
+                                    }
                                 )
                         )
                     }
@@ -255,7 +271,8 @@ private fun WorkoutCard(
     val context = LocalContext.current
     val deleteButtonWidth = 72.dp
     val deleteButtonWidthPx = with(LocalDensity.current) { deleteButtonWidth.toPx() }
-    val screenWidthPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidthPx =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val swipeSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -353,7 +370,8 @@ private fun WorkoutCard(
                     .draggable(
                         state = rememberDraggableState { delta ->
                             scope.launch {
-                                val newOffset = (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
+                                val newOffset =
+                                    (offsetX.value + delta).coerceIn(-deleteButtonWidthPx, 0f)
                                 offsetX.snapTo(newOffset)
                             }
                         },
@@ -361,7 +379,8 @@ private fun WorkoutCard(
                         onDragStarted = { onSwipeStarted() },
                         onDragStopped = {
                             scope.launch {
-                                val target = if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
+                                val target =
+                                    if (offsetX.value < -deleteButtonWidthPx / 2) -deleteButtonWidthPx else 0f
                                 offsetX.animateTo(target, swipeSpec)
                             }
                         }
@@ -375,75 +394,76 @@ private fun WorkoutCard(
                         .fillMaxWidth()
                         .height(IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Full-height drag handle strip
-                Box(
-                    modifier = dragModifier
-                        .fillMaxHeight()
-                        .width(32.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "⠿",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                // Clickable content area
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onClick() }
-                        .padding(top = 16.dp, bottom = 16.dp, end = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 12.dp)
+                    // Full-height drag handle strip
+                    Box(
+                        modifier = dragModifier
+                            .fillMaxHeight()
+                            .width(32.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        contentAlignment = Alignment.Center
                     ) {
-                    Text(
-                        text = workout.name,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    if (workout.description.isNotBlank()) {
                         Text(
-                            text = workout.description,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "⠿",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
-                }
-                val narrowSize = IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
-                val buttonShapes = IconButtonDefaults.shapes()
-                val haptic = LocalHapticFeedback.current
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onEdit()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDuplicate()
-                    },
-                    modifier = Modifier.size(narrowSize),
-                    shapes = buttonShapes
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
+                    // Clickable content area
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onClick() }
+                            .padding(top = 16.dp, bottom = 16.dp, end = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 12.dp)
+                        ) {
+                            Text(
+                                text = workout.name,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            if (workout.description.isNotBlank()) {
+                                Text(
+                                    text = workout.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                        val narrowSize =
+                            IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Narrow)
+                        val buttonShapes = IconButtonDefaults.shapes()
+                        val haptic = LocalHapticFeedback.current
+                        FilledTonalIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onEdit()
+                            },
+                            modifier = Modifier.size(narrowSize),
+                            shapes = buttonShapes
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FilledTonalIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onDuplicate()
+                            },
+                            modifier = Modifier.size(narrowSize),
+                            shapes = buttonShapes
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate")
+                        }
+                    }
                 }
             }
         }
-    }
-    }
     }
 }
 
@@ -490,7 +510,9 @@ fun WorkoutEditSheet(
                 onValueChange = { name = it },
                 label = { Text("Workout name") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
             )
             OutlinedTextField(
                 value = description,
@@ -505,14 +527,19 @@ fun WorkoutEditSheet(
             ) {
                 OutlinedButton(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                    onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                    }
                 ) {
                     Text("Cancel")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onConfirm(name.trim(), description.trim()) } },
+                    onClick = {
+                        scope.launch { sheetState.hide() }
+                            .invokeOnCompletion { onConfirm(name.trim(), description.trim()) }
+                    },
                     enabled = name.isNotBlank()
                 ) {
                     Text(if (isEditing) "Save" else "Create")

@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Dark splash screen theme - used before Compose takes over -->
     <style name="Theme.RepAttack" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#FF1A1A2E</item>

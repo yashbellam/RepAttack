@@ -107,11 +107,23 @@ class WorkoutDetailViewModel(
         }
     }
 
-    fun updateExercise(exerciseWithCatalog: WorkoutExerciseWithCatalog, name: String, url: String, notes: String = "") {
+    fun updateExercise(
+        exerciseWithCatalog: WorkoutExerciseWithCatalog,
+        name: String,
+        url: String,
+        notes: String = ""
+    ) {
         viewModelScope.launch {
-            val catalog = repository.getCatalogExerciseById(exerciseWithCatalog.workoutExercise.exerciseId)
+            val catalog =
+                repository.getCatalogExerciseById(exerciseWithCatalog.workoutExercise.exerciseId)
             if (catalog != null) {
-                repository.updateCatalogExercise(catalog.copy(name = name, url = url, notes = notes))
+                repository.updateCatalogExercise(
+                    catalog.copy(
+                        name = name,
+                        url = url,
+                        notes = notes
+                    )
+                )
             }
             // Update per-workout settings
             repository.updateWorkoutExercise(exerciseWithCatalog.workoutExercise)
@@ -133,7 +145,8 @@ class WorkoutDetailViewModel(
     fun duplicateExercise(exercise: WorkoutExerciseWithCatalog) {
         viewModelScope.launch {
             val allExercises = _exercises.value
-            val insertIndex = allExercises.indexOfFirst { it.workoutExercise.id == exercise.workoutExercise.id } + 1
+            val insertIndex =
+                allExercises.indexOfFirst { it.workoutExercise.id == exercise.workoutExercise.id } + 1
 
             val toShift = allExercises.filter { it.workoutExercise.orderIndex >= insertIndex }
                 .map { it.workoutExercise.copy(orderIndex = it.workoutExercise.orderIndex + 1) }

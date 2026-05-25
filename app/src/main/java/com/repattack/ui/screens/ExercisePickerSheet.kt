@@ -14,10 +14,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -79,7 +79,9 @@ fun ExercisePickerSheet(
 
             // Create new option
             Button(
-                onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onCreateNew() } },
+                onClick = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion { onCreateNew() }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -125,8 +127,14 @@ fun ExercisePickerSheet(
                 ) {
                     itemsIndexed(filtered, key = { _, ex -> ex.id }) { index, exercise ->
                         SegmentedListItem(
-                            onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onPickExisting(exercise) } },
-                            shapes = ListItemDefaults.segmentedShapes(index = index, count = filtered.size),
+                            onClick = {
+                                scope.launch { sheetState.hide() }
+                                    .invokeOnCompletion { onPickExisting(exercise) }
+                            },
+                            shapes = ListItemDefaults.segmentedShapes(
+                                index = index,
+                                count = filtered.size
+                            ),
                             colors = ListItemDefaults.segmentedColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             ),

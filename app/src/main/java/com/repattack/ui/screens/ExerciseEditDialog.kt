@@ -5,19 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -55,7 +55,11 @@ fun ExerciseEditDialog(
     ) -> Unit
 ) {
     var name by remember { mutableStateOf(exercise?.name ?: "") }
-    var targetSets by remember { mutableStateOf(exercise?.workoutExercise?.targetSets?.toString() ?: "") }
+    var targetSets by remember {
+        mutableStateOf(
+            exercise?.workoutExercise?.targetSets?.toString() ?: ""
+        )
+    }
     var minReps by remember { mutableStateOf(exercise?.workoutExercise?.minReps?.toString() ?: "") }
     var maxReps by remember { mutableStateOf(exercise?.workoutExercise?.maxReps?.toString() ?: "") }
     var restTime by remember { mutableStateOf(exercise?.workoutExercise?.restTime ?: "") }
@@ -95,8 +99,8 @@ fun ExerciseEditDialog(
         ) {
             Text(
                 text = if (isEditing) "Edit Exercise"
-                       else if (hasCatalogPrefill) "Add Exercise"
-                       else "New Exercise",
+                else if (hasCatalogPrefill) "Add Exercise"
+                else "New Exercise",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -108,7 +112,9 @@ fun ExerciseEditDialog(
                 singleLine = true,
                 readOnly = catalogFieldsLocked,
                 enabled = !catalogFieldsLocked,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
             )
 
             OutlinedTextField(
@@ -117,7 +123,9 @@ fun ExerciseEditDialog(
                 label = { Text("Sets") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth().focusRequester(setsFocusRequester)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(setsFocusRequester)
             )
 
             Row(
@@ -180,7 +188,9 @@ fun ExerciseEditDialog(
             ) {
                 OutlinedButton(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } }
+                    onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                    }
                 ) {
                     Text("Cancel")
                 }
