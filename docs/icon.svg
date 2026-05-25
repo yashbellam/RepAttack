@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108" role="img" aria-label="Rep Attack icon">
+  <circle cx="54" cy="54" r="54" fill="#1A1A2E"/>
+  <g>
+    <!-- Barbell bar (metallic) -->
+    <path d="M30,58 L78,58 L78,62 L30,62 Z" fill="#B0BEC5"/>
+    <path d="M30,59 L78,59 L78,60.5 L30,60.5 Z" fill="#ECEFF1"/>
+    <path d="M30,61 L78,61 L78,62 L30,62 Z" fill="#78909C"/>
+    <!-- Left plate -->
+    <path d="M23,48 C23,46.3 24.3,45 26,45 L30,45 L30,75 L26,75 C24.3,75 23,73.7 23,72 Z" fill="#FF9800"/>
+    <path d="M17,51.5 C17,50.1 18.1,49 19.5,49 L23,49 L23,71 L19.5,71 C18.1,71 17,69.9 17,68.5 Z" fill="#FF9800" fill-opacity="0.55"/>
+    <!-- Right plate -->
+    <path d="M78,45 L82,45 C83.7,45 85,46.3 85,48 L85,72 C85,73.7 83.7,75 82,75 L78,75 Z" fill="#FF9800"/>
+    <path d="M85,49 L88.5,49 C89.9,49 91,50.1 91,51.5 L91,68.5 C91,69.9 89.9,71 88.5,71 L85,71 Z" fill="#FF9800" fill-opacity="0.55"/>
+    <!-- Chevrons -->
+    <path d="M36,30 L54,20 L72,30" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5"/>
+    <path d="M36,40 L54,30 L72,40" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
