@@ -14,7 +14,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.example.repattack.wear"
+    namespace = "com.repattack.wear"
     compileSdk = 36
 
     defaultConfig {

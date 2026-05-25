@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:name=".RepAttackApplication"
+        android:name="com.repattack.RepAttackApplication"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
@@ -15,7 +15,7 @@
         android:theme="@style/Theme.RepAttack">
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.repattack.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.RepAttack">
             <intent-filter>
@@ -25,24 +25,24 @@
         </activity>
 
         <activity
-            android:name=".LogSessionActivity"
+            android:name="com.repattack.LogSessionActivity"
             android:theme="@style/Theme.RepAttack.Compose"
             android:windowSoftInputMode="adjustNothing" />
 
         <activity
-            android:name=".WorkoutDetailActivity"
+            android:name="com.repattack.WorkoutDetailActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
         <activity
-            android:name=".ExerciseCatalogActivity"
+            android:name="com.repattack.ExerciseCatalogActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
         <activity
-            android:name=".ExerciseHistoryActivity"
+            android:name="com.repattack.ExerciseHistoryActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
         <activity
-            android:name=".ProgramActivity"
+            android:name="com.repattack.ProgramActivity"
             android:theme="@style/Theme.RepAttack.Compose" />
 
     </application>

@@ -15,7 +15,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.example.repattack"
+    namespace = "com.repattack"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1

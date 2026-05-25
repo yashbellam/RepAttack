@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.repattack.shared"
+    namespace = "com.repattack.shared"
     compileSdk = 36
 
     defaultConfig {
