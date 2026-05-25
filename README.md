@@ -1,7 +1,7 @@
 <div align="center">
 
 <img src="docs/icon.svg" width="120" alt="Rep Attack icon" />
-
+<br>
 <img src="docs/title.svg" width="420" alt="Rep Attack" />
 
 **A clean, offline gym tracker for Android — with a Wear OS companion app.**
@@ -9,18 +9,14 @@
 Plan your workouts, log every set in seconds, and watch your numbers go up.
 No accounts. No ads. No tracking. Ever.
 
-![Android](https://img.shields.io/badge/Android-7%2B-3DDC84?logo=android&logoColor=white)
-![Wear OS](https://img.shields.io/badge/Wear%20OS-3%2B-4285F4?logo=wearos&logoColor=white)
-![Material 3](https://img.shields.io/badge/Material%203-Expressive-6750A4?logo=materialdesign&logoColor=white)
+[![Android](https://img.shields.io/badge/Android-7%2B-3DDC84?logo=android&logoColor=white)](https://www.android.com)
+[![Wear OS](https://img.shields.io/badge/Wear%20OS-3%2B-4285F4?logo=wearos&logoColor=white)](https://wearos.google.com)
+[![Material 3](https://img.shields.io/badge/Material%203-Expressive-6750A4?logo=materialdesign&logoColor=white)](https://m3.material.io)
 [![License](https://img.shields.io/badge/License-GPL%20v3-A42E2B?logo=gnu&logoColor=white)](LICENSE)
 
-<a href="https://github.com/yashbellam/RepAttack/releases/latest">
-  <img alt="Download APK" src="https://img.shields.io/badge/Download-APK-181717?logo=github&logoColor=white&style=for-the-badge" />
-</a>
+[![Download APK](https://img.shields.io/badge/Download-APK-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/yashbellam/RepAttack/releases/latest)
 
 </div>
-
----
 
 ## Why Rep Attack?
 
@@ -34,13 +30,9 @@ Most gym apps want your email, your subscription, and your attention. Rep Attack
 - 🎨 **Looks great.** Material 3 Expressive, dynamic color on Android 12+, and spring-physics motion throughout.
 - 📳 **Feels great.** Tuned haptic feedback on every meaningful action — set completion, swipes, drag handles, delete confirmations.
 
----
-
 ## Screenshots
 
 <div align="center">
-
-### On your phone
 
 <table>
   <tr>
@@ -55,8 +47,6 @@ Most gym apps want your email, your subscription, and your attention. Rep Attack
   </tr>
 </table>
 
-### On your wrist
-
 <table>
   <tr>
     <td><img src="docs/screenshots/wear-list.png" width="200" /></td>
@@ -66,8 +56,6 @@ Most gym apps want your email, your subscription, and your attention. Rep Attack
 </table>
 
 </div>
-
----
 
 ## Building from source
 
@@ -97,8 +85,6 @@ Modules:
 - `wear/` — Wear OS companion
 
 </details>
-
----
 
 ## License
 
