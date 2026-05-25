@@ -4,9 +4,7 @@
 # Required repository secrets (Settings → Secrets and variables → Actions):
 #   RELEASE_KEYSTORE_BASE64    - base64-encoded contents of repattack-release.jks
 #   RELEASE_KEYSTORE_PASSWORD  - keystore password
-#   RELEASE_KEY_ALIAS          - `repattack`
 #   RELEASE_KEY_PASSWORD       - key password (same as keystore password in our setup)
-#
 # The release is created as a DRAFT so you can review/edit notes and the
 # attached APKs before publishing it to users.
 
@@ -52,13 +50,12 @@ jobs:
       - name: Write keystore.properties
         env:
           KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           cat > keystore.properties <<EOF
           storeFile=$GITHUB_WORKSPACE/release.jks
           storePassword=$KEYSTORE_PASSWORD
-          keyAlias=$KEY_ALIAS
+          keyAlias=repattack
           keyPassword=$KEY_PASSWORD
           EOF
 
