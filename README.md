@@ -14,7 +14,7 @@ No accounts. No ads. No tracking. Ever.
 ![Material 3](https://img.shields.io/badge/Material%203-Expressive-6750A4?logo=materialdesign&logoColor=white)
 [![License](https://img.shields.io/badge/License-GPL%20v3-A42E2B?logo=gnu&logoColor=white)](LICENSE)
 
-<a href="https://github.com/yashbellam97/RepAttack/releases/latest">
+<a href="https://github.com/yashbellam/RepAttack/releases/latest">
   <img alt="Download APK" src="https://img.shields.io/badge/Download-APK-181717?logo=github&logoColor=white&style=for-the-badge" />
 </a>
 
@@ -74,7 +74,7 @@ Most gym apps want your email, your subscription, and your attention. Rep Attack
 Want to hack on it or build your own APK? You'll need a recent Android Studio and JDK 11.
 
 ```bash
-git clone https://github.com/yashbellam97/RepAttack.git
+git clone https://github.com/yashbellam/RepAttack.git
 cd RepAttack
 ./gradlew :app:installDebug    # phone app
 ./gradlew :wear:installDebug   # wear os companion
