@@ -76,7 +76,7 @@ fun WorkoutDetailScreen(workout: SyncWorkout) {
 
                     val lastSession = if (exercise.lastSets.isNotEmpty()) {
                         val weights = exercise.lastSets.mapNotNull { it.weight }.distinct()
-                        if (weights.size == 1 && weights[0] != null) {
+                        if (weights.size == 1) {
                             val w = weights[0]
                             val weightStr =
                                 if (w % 1.0 == 0.0) w.toInt().toString() else w.toString()

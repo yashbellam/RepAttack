@@ -17,7 +17,8 @@ import com.repattack.data.model.WorkoutExercise
 
 @Database(
     entities = [Program::class, Workout::class, ExerciseCatalog::class, WorkoutExercise::class, ExerciseLog::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class RepAttackDatabase : RoomDatabase() {
     abstract fun programDao(): ProgramDao
@@ -37,7 +38,7 @@ abstract class RepAttackDatabase : RoomDatabase() {
                     RepAttackDatabase::class.java,
                     "repattack_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build().also { INSTANCE = it }
             }
         }
