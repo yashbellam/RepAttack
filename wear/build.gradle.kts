@@ -9,7 +9,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.repattack"
+        applicationId = "io.github.yashbellam.repattack"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

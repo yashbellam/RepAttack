@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.repattack"
+        applicationId = "io.github.yashbellam.repattack"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
